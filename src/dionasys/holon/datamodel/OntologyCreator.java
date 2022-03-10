@@ -207,28 +207,23 @@ public class OntologyCreator {
 	 * @throws org.semanticweb.owlapi.model.OWLOntologyStorageException
 	 * @throws java.io.FileNotFoundException
 	 */
-	public OWLOntology creatOntology(TreeNode<NodeObject> tree)
-			throws OWLOntologyCreationException, OWLOntologyStorageException, FileNotFoundException, IOException {
-		HolonDataModel me = (HolonDataModel) tree.root().data().getObject();
-		TraversalAction<TreeNode<NodeObject>> action = new TraversalAction<TreeNode<NodeObject>>() {
-			@Override
-			public void perform(TreeNode<NodeObject> node) {
-				NodeObject obj = node.data();
-				if (node.isLeaf()) {
-					HolonServiceModel service = (HolonServiceModel) node.data().getObject();
-					me.getServices().add(service);
-				}
-			}
-
-			@Override
-			public boolean isCompleted() {
-				return false; // return true in order to stop traversing
-			}
-		};
-		tree.traversePreOrder(action);
-		return creatOntology(me);
-	}
-
+	/*
+	 * public OWLOntology creatOntology(TreeNode<NodeObject> tree) throws
+	 * OWLOntologyCreationException, OWLOntologyStorageException,
+	 * FileNotFoundException, IOException { HolonDataModel me = (HolonDataModel)
+	 * tree.root().data().getObject(); TraversalAction<TreeNode<NodeObject>> action
+	 * = new TraversalAction<TreeNode<NodeObject>>() {
+	 * 
+	 * @Override public void perform(TreeNode<NodeObject> node) { NodeObject obj =
+	 * node.data(); if (node.isLeaf()) { HolonServiceModel service =
+	 * (HolonServiceModel) node.data().getObject(); me.getServices().add(service); }
+	 * }
+	 * 
+	 * @Override public boolean isCompleted() { return false; // return true in
+	 * order to stop traversing } }; tree.traversePreOrder(action); return
+	 * creatOntology(me); }
+	 */
+	
 	/**
 	 * Create OWLClass
 	 * 
