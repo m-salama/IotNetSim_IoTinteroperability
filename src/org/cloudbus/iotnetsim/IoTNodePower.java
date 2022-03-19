@@ -19,7 +19,7 @@ package org.cloudbus.iotnetsim;
  */
 
 /**
- * Class
+ * Class IoTNodePower
  * 
  * @author Maria Salama
  * 
@@ -29,13 +29,13 @@ public class IoTNodePower {
 
 	private IoTNodePowerType powerType;
 	private boolean isContinuousPower;
-	private boolean isBatteryPower;
+	//private boolean isBatteryPower;
 	
 	private boolean isCurrentPlugged;
 
-	private double currentBatteryLevel;
-	private double batteryConsumptionRate;
-	private double batteryLowThreshold;
+	private double currentPowerLevel;
+	private double powerConsumptionRate;
+	private double powerLowThreshold;
 	
 	public IoTNodePower() {
 		super();
@@ -47,11 +47,11 @@ public class IoTNodePower {
 		super();
 		this.powerType = powerType;
 		this.isContinuousPower = isContinuousPower;
-		this.isBatteryPower = isBatteryPower;
+		//this.isBatteryPower = isBatteryPower;
 		this.isCurrentPlugged = isCurrentPlugged;
-		this.currentBatteryLevel = currentBatteryLevel;
-		this.batteryConsumptionRate = batteryConsumptionRate;
-		this.batteryLowThreshold = batteryLowThreshold;
+		this.currentPowerLevel = currentBatteryLevel;
+		this.powerConsumptionRate = batteryConsumptionRate;
+		this.powerLowThreshold = batteryLowThreshold;
 	}
 
 	public void plugPower() {
@@ -63,23 +63,23 @@ public class IoTNodePower {
 	}
 
 	public void consumeBatteryLevel() {
-		currentBatteryLevel -= batteryConsumptionRate;
+		currentPowerLevel -= powerConsumptionRate;
 	}
 	
 	public void chargeBattery() {
-		currentBatteryLevel += batteryConsumptionRate;
+		currentPowerLevel += powerConsumptionRate;
 	}
 	
 	public void chargeBatteryToFull() {
-		currentBatteryLevel = 100.00;
+		currentPowerLevel = 100.00;
 	}
 
 	public boolean isBatteryFull() {
-		return this.currentBatteryLevel == 100.00;
+		return this.currentPowerLevel == 100.00;
 	}
 	
 	public boolean isBatteryLow() {
-		return this.currentBatteryLevel <= batteryLowThreshold;
+		return this.currentPowerLevel <= powerLowThreshold;
 	}
 
 	public IoTNodePowerType getPowerType() {
@@ -98,14 +98,13 @@ public class IoTNodePower {
 		this.isContinuousPower = isContinuousPower;
 	}
 
-	public boolean isBatteryPower() {
-		return isBatteryPower;
-	}
-
-	public void setBatteryPower(boolean isBatteryPower) {
-		this.isBatteryPower = isBatteryPower;
-	}
-
+	/*
+	 * public boolean isBatteryPower() { return isBatteryPower; }
+	 * 
+	 * public void setBatteryPower(boolean isBatteryPower) { this.isBatteryPower =
+	 * isBatteryPower; }
+	 */
+	
 	public boolean isCurrentPlugged() {
 		return isCurrentPlugged;
 	}
@@ -115,27 +114,27 @@ public class IoTNodePower {
 	}
 
 	public double getCurrentBatteryLevel() {
-		return currentBatteryLevel;
+		return currentPowerLevel;
 	}
 
 	public void setCurrentBatteryLevel(double currentBatteryLevel) {
-		this.currentBatteryLevel = currentBatteryLevel;
+		this.currentPowerLevel = currentBatteryLevel;
 	}
 
 	public double getBatteryConsumptionRate() {
-		return batteryConsumptionRate;
+		return powerConsumptionRate;
 	}
 
 	public void setBatteryConsumptionRate(double batteryConsumptionRate) {
-		this.batteryConsumptionRate = batteryConsumptionRate;
+		this.powerConsumptionRate = batteryConsumptionRate;
 	}
 
 	public double getBatteryLowThreshold() {
-		return batteryLowThreshold;
+		return powerLowThreshold;
 	}
 
 	public void setBatteryLowThreshold(double batteryLowThreshold) {
-		this.batteryLowThreshold = batteryLowThreshold;
+		this.powerLowThreshold = batteryLowThreshold;
 	}
 
 	

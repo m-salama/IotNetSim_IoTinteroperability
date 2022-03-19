@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 package org.cloudbus.iotnetsim.iov;
 
 import org.cloudbus.iotnetsim.IoTNodePower;
@@ -8,23 +11,20 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNodeMobile;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
- * Class
- * 
- * @author Maria Salama
- * 
+ * @author m.salama
+ *
  */
+public class UserSmartPhone extends IoTNode  implements IoTNodeMobile {
 
-public class Vehicle extends IoTNode  implements IoTNodeMobile {
-
-	private Location currentLocation;	
+	private Location currentLocation;
 
 
-	public Vehicle(String name) {
+	public UserSmartPhone(String name) {
 		super(name);
 		// TODO Auto-generated constructor stub
 	}
 
-	public Vehicle(String name, 
+	public UserSmartPhone(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName) {
 		
 		super(name, location, nodeType, connection, power, forwardNodeName);

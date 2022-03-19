@@ -17,4 +17,14 @@ public class IoTNodeHolon extends IoTNode implements IoTHolon  {
 		// TODO Auto-generated constructor stub
 	}
 
+	
+	//extends Holon
+	
+	//createHolon()
+	//parseHolon(xml)
+	//requestHolon()
+	//receiveHolon()
+	
+	//request information from datacenter
+	
 }

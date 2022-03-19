@@ -42,10 +42,10 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 
 public class GatewayNode extends IoTNode {
 
-	private double forwardInterval;			//forward data every x seconds
-	private double dataProcessingInterval;		//interval for processing data events
+	protected double forwardInterval;			//forward data every x seconds
+	protected double dataProcessingInterval;		//interval for processing data events
 
-	private List<SensorReading> readingsDataReceived; 	//storing data received 
+	protected List<SensorReading> readingsDataReceived; 	//storing data received 
 	protected Map<SensorType, Map<Double, Double>> readingsDataAggregated; 		//storing aggregated data, k: SensorType, v: aggregated value  
 
 	

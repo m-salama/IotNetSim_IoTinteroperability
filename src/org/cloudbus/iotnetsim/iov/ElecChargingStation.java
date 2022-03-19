@@ -7,6 +7,6 @@ package org.cloudbus.iotnetsim.iov;
  * 
  */
 
-public class VehicleFuelStation {
+public class ElecChargingStation {
 
 }
