@@ -1,8 +1,9 @@
-package org.cloudbus.iotnetsim.iot.nodes;
+package org.cloudbus.iotnetsim.naturalenv;
 
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeMobile;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**

@@ -10,13 +10,15 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 /**
  * Class
  * 
- * @author Maria Salama
+ * @author m.salama
  * 
  */
 
 public class Vehicle extends IoTNode  implements IoTNodeMobile {
 
 	private Location currentLocation;	
+	
+	private VehicleType vehicleType;
 
 
 	public Vehicle(String name) {
@@ -43,6 +45,20 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 
 	public void changeAltitude(double newZ) {
 		
+	}
+
+	/**
+	 * @return the vehicleType
+	 */
+	public VehicleType getVehicleType() {
+		return vehicleType;
+	}
+
+	/**
+	 * @param vehicleType the vehicleType to set
+	 */
+	public void setVehicleType(VehicleType vehicleType) {
+		this.vehicleType = vehicleType;
 	}
 	
 }

@@ -12,7 +12,7 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.iotnetsim.iot.nodes.SensorType;
+import org.cloudbus.iotnetsim.naturalenv.SensorType;
 
 /**
  * Title:        IoTNetSim Toolkit

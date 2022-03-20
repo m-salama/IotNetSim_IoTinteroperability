@@ -1,4 +1,4 @@
-package org.cloudbus.iotnetsim.iot.nodes;
+package org.cloudbus.iotnetsim.naturalenv;
 
 /**
  * Title:        IoTNetSim Toolkit

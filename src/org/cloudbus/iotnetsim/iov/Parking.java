@@ -1,5 +1,9 @@
 package org.cloudbus.iotnetsim.iov;
 
+import dionasys.holon.Holon;
+import dionasys.holon.HolonRegistry;
+import dionasys.holon.datamodel.HolonDataModel;
+
 /**
  * Class
  * 
@@ -7,6 +11,11 @@ package org.cloudbus.iotnetsim.iov;
  * 
  */
 
-public class Parking {
+public class Parking extends Holon {
+
+	public Parking(HolonDataModel model, String type, HolonRegistry registry) {
+		super(model, type, registry);
+		// TODO Auto-generated constructor stub
+	}
 
 }

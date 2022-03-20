@@ -8,8 +8,8 @@ import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.GatewayNode;
-import org.cloudbus.iotnetsim.iot.nodes.SensorReading;
-import org.cloudbus.iotnetsim.iot.nodes.SensorType;
+import org.cloudbus.iotnetsim.naturalenv.SensorReading;
+import org.cloudbus.iotnetsim.naturalenv.SensorType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -70,6 +70,10 @@ public class TrafficControlUnit extends GatewayNode {
 		// initialise data structures
 		readingsDataReceived = new ArrayList<SensorReading>();
 		readingsDataAggregated = new HashMap<SensorType, Map<Double, Double>>();
+	}
+	
+	public void sendTrafficAlert() {
+		
 	}
 
 

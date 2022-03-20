@@ -7,6 +7,9 @@ package org.cloudbus.iotnetsim.iov;
  * @author m.salama
  *
  */
-public class VehicleElec {
+public enum VehicleType {
+	
+	FUEL_VEHICLE,
+	ELECTRIC_VEHICLE
 
 }
