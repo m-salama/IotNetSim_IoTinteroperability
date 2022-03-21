@@ -33,6 +33,7 @@ public class Parking extends IoTNode {
 	protected int currentExpDay;
 	protected int currentChangeIndex;
 	
+	
 	public Parking(String name) {
 		super(name);
 		// TODO Auto-generated constructor stub

@@ -1,6 +1,7 @@
 package org.cloudbus.iotnetsim.iov;
 
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.IoTNodePower;
@@ -11,6 +12,7 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
  * Class Station
+ * for service station of fuel and electric cars based on the VehicleType
  * 
  * @author Maria Salama
  * 
@@ -52,8 +54,6 @@ public class Station extends IoTNode  {
 		// TODO Auto-generated method stub
 		Log.printLine(getName() + " is starting...");
 
-		// schedule the first event for parking
-		schedule(this.getId(), this.parkingChangeInterval, CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY);
 	}
 
 	@Override
@@ -67,8 +67,8 @@ public class Station extends IoTNode  {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
 		// Execute sending sensor data 
-		case CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY:
-			processChangeParkingAvailability();
+		case CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY:
+			processChangeStationvailability(ev);
 			break;
 
 		// other unknown tags are processed by this method
@@ -76,6 +76,19 @@ public class Station extends IoTNode  {
 			processOtherEvent(ev);
 			break;
 		}				
+	}
+
+	private void processChangeStationvailability(SimEvent ev) {
+		boolean is_available = (boolean) ev.getData();
+		this.isAvailable = is_available;
+
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing availability" 
+				+ " to " + Boolean.toString(this.isAvailable) 
+				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
+				);
+
+		//send update to Datacenter
+		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, is_available);
 	}
 
 
