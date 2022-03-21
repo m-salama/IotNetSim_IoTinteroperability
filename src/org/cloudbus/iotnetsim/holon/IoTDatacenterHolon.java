@@ -27,7 +27,5 @@ public class IoTDatacenterHolon extends IoTDatacenter {
 	//pubsub service
 	//HolonRegistry
 	//sendHolon()
-	
-	//send information to node
 
 }
