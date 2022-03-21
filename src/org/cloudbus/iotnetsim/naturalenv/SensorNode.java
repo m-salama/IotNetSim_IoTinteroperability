@@ -1,4 +1,4 @@
-package org.cloudbus.iotnetsim.iot.nodes;
+package org.cloudbus.iotnetsim.naturalenv;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -13,8 +13,9 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.IoTNodePower;
-import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -36,7 +37,7 @@ import org.cloudbus.iotnetsim.network.NetConnection;
  */
 
 /**
- * Class
+ * Class SensorNode
  * 
  * @author Maria Salama
  * 
@@ -98,7 +99,7 @@ public class SensorNode extends IoTNode {
 		}
 		
 		// schedule the first event for sending data
-		schedule(this.getId(), readingInterval, CloudSimTags.IOT_SENSOR_SEND_DATA_EVENT);
+		schedule(this.getId(), readingInterval, CloudSimTags.IOT_NATURALENV_SENSOR_SEND_DATA_EVENT);
 	}
 
 	@Override
@@ -112,7 +113,7 @@ public class SensorNode extends IoTNode {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
 		// Execute sending sensor data 
-		case CloudSimTags.IOT_SENSOR_SEND_DATA_EVENT:
+		case CloudSimTags.IOT_NATURALENV_SENSOR_SEND_DATA_EVENT:
 			processSendReadingsData();
 			break;
 
@@ -189,7 +190,7 @@ public class SensorNode extends IoTNode {
 	}
 
 	private void scheduleNextReading(){
-		schedule(this.getId(), this.getReadingInterval(), CloudSimTags.IOT_SENSOR_SEND_DATA_EVENT);
+		schedule(this.getId(), this.getReadingInterval(), CloudSimTags.IOT_NATURALENV_SENSOR_SEND_DATA_EVENT);
 	}
 
 	protected void processOtherEvent(SimEvent ev) {

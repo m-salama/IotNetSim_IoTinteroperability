@@ -26,8 +26,15 @@ package org.cloudbus.iotnetsim;
  */
 
 public enum IoTNodePowerType {
+	CONTINUOUS_POWER,
+
+	//charging
 	BATTERY,
 	USB_CAHRGING,
 	SOLAR_PANEL,
-	CONTINUOUS_POWER
+	
+	//vehicles
+	FUEL,
+	ELEC_CHARGING
+	
 }

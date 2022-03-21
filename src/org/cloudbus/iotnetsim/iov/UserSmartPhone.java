@@ -1,44 +1,49 @@
 /**
  * 
  */
-package org.cloudbus.iotnetsim.iot.nodes.holon;
+package org.cloudbus.iotnetsim.iov;
 
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeMobile;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
- * Class IoTNodeHolon
- * extends IoTNode with Holons functions
- * 
  * @author m.salama
- * @author elhabbash
  *
  */
-public class IoTNodeHolon extends IoTNode implements IoTHolon  {
+public class UserSmartPhone extends IoTNode  implements IoTNodeMobile {
 
-	public IoTNodeHolon(String name) {
+	private Location currentLocation;
+
+
+	public UserSmartPhone(String name) {
 		super(name);
 		// TODO Auto-generated constructor stub
 	}
 
-	public IoTNodeHolon(String name, 
+	public UserSmartPhone(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName) {
-
+		
 		super(name, location, nodeType, connection, power, forwardNodeName);
 		// TODO Auto-generated constructor stub
+		
+		this.currentLocation = location;
+	}
+	
+
+	public Location getCurrentLocation() {
+		return currentLocation;
 	}
 
-	
-	//extends Holon
-	
-	//createHolon()
-	//parseHolon(xml)
-	//requestHolon()
-	//receiveHolon()
-	
-	//request information from datacenter
+	public void setCurrentLocation(Location currentLocation) {
+		this.currentLocation = currentLocation;
+	}
+
+	public void changeAltitude(double newZ) {
+		
+	}
 	
 }

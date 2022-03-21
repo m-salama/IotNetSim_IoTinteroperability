@@ -12,7 +12,9 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.iotnetsim.iot.nodes.SensorType;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iov.IoVNodeType;
+import org.cloudbus.iotnetsim.naturalenv.SensorType;
 
 /**
  * Title:        IoTNetSim Toolkit
@@ -41,7 +43,10 @@ import org.cloudbus.iotnetsim.iot.nodes.SensorType;
 
 public class IoTDatacenter extends Datacenter {
 
+	//NaturalEnv data
 	protected Map<SensorType, Map<Double, Double>> readingsData; 		//storing data, k: SensorType, v: (reading time, reading value) 
+	//IoV data
+	protected Map<IoVNodeType, Map<Double, Double>> dataIoV; 			//storing data, k: NodeType, v: (time, value) 
 	
 	
 	/**
@@ -91,13 +96,17 @@ public class IoTDatacenter extends Datacenter {
 		super.processEvent(ev);
 
 		switch (ev.getTag()) {
-		// process receiving data from Gateway Node
+		// process receiving data from Gateway Node in the NaturalEnv
 		case CloudSimTags.IOT_CLOUD_RECEIVE_DATA_EVENT:
 			receiveAndStoreData(ev);
 			break;
 		//process data received (storing, alerting..)
 		case CloudSimTags.IOT_CLOUD_PROCESS_DATA_EVENT:
 			processData(ev);
+			break;
+	// process receiving data from entities in IoV
+		case CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT:
+			receiveAndStoreIoVData(ev);
 			break;
 
 		}
@@ -110,7 +119,7 @@ public class IoTDatacenter extends Datacenter {
 		
 		int senderId = ev.getSource();
 		
-		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving aggregated data from GatewayNode " + CloudSim.getEntityName(senderId));
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving aggregated data from " + CloudSim.getEntityName(senderId));
 
 		//create a data structure for each SensorType
 		for (SensorType t : SensorType.values()) {
@@ -130,6 +139,32 @@ public class IoTDatacenter extends Datacenter {
 		Log.printLine();
 	}
 
+	@SuppressWarnings("unchecked")
+	public void receiveAndStoreIoVData(SimEvent ev) {
+		Map<IoVNodeType, Map<Double, Double>> evdata = new HashMap<IoVNodeType, Map<Double, Double>>();
+		evdata = (Map<IoVNodeType, Map<Double, Double>>) ev.getData();
+		
+		int senderId = ev.getSource();
+		
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving data from " + CloudSim.getEntityName(senderId));
+
+		//create a data structure for each NodeType
+		for (IoVNodeType t : IoVNodeType.values()) {
+			dataIoV.computeIfAbsent(t, ignored -> new HashMap<>());
+		}
+
+		//put data entries for each SensorType
+		for (Map.Entry<IoVNodeType, Map<Double, Double>> e : evdata.entrySet()) {
+			dataIoV.get(e.getKey()).putAll(e.getValue());
+		}
+		
+		//storing data
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is storing IoV data: ");
+		evdata.forEach((t, data) -> Log.printLine("Node Type: " + t.name() 
+											+ " values: " + data.values().toString() ));	
+		Log.printLine();
+	}
+
 	public void processData(SimEvent ev) {
 
 	}
@@ -140,6 +175,14 @@ public class IoTDatacenter extends Datacenter {
 
 	public void setReadingsData(Map<SensorType, Map<Double, Double>> readingsData) {
 		this.readingsData = readingsData;
+	}
+
+	public Map<IoVNodeType, Map<Double, Double>> getIoVData() {
+		return dataIoV;
+	}
+
+	public void setIoVData(Map<IoVNodeType, Map<Double, Double>> data) {
+		this.dataIoV = data;
 	}
 
 

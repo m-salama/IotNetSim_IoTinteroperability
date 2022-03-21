@@ -10,8 +10,10 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.IoTNodePower;
-import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
+import org.cloudbus.iotnetsim.naturalenv.SensorNode;
+import org.cloudbus.iotnetsim.naturalenv.SensorReading;
+import org.cloudbus.iotnetsim.naturalenv.SensorType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -42,10 +44,10 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 
 public class GatewayNode extends IoTNode {
 
-	private double forwardInterval;			//forward data every x seconds
-	private double dataProcessingInterval;		//interval for processing data events
+	protected double forwardInterval;			//forward data every x seconds
+	protected double dataProcessingInterval;		//interval for processing data events
 
-	private List<SensorReading> readingsDataReceived; 	//storing data received 
+	protected List<SensorReading> readingsDataReceived; 	//storing data received 
 	protected Map<SensorType, Map<Double, Double>> readingsDataAggregated; 		//storing aggregated data, k: SensorType, v: aggregated value  
 
 	
