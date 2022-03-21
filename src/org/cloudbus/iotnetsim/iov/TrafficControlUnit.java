@@ -5,15 +5,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.cloudbus.iotnetsim.IoTNodePower;
-import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.GatewayNode;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.naturalenv.SensorReading;
 import org.cloudbus.iotnetsim.naturalenv.SensorType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
-/**
- * Class
+/** 
+ * Class TrafficControlUnit
  * 
  * @author Maria Salama
  * 

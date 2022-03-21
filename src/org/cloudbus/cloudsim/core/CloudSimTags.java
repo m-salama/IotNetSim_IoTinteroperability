@@ -29,26 +29,35 @@ package org.cloudbus.cloudsim.core;
 public class CloudSimTags {
 
 	/** 
-	 * Starting constant value bases 
+	 * Starting constant values for bases
 	*/
 
-	/** Starting constant value for cloud-related tags **/
+	/** Constant value for cloud-related tags **/
 	private static final int BASE = 0;
 
-	/** Starting constant value for network-related tags **/
+	/** Constant value for network-related tags **/
 	private static final int NETBASE = 100;
 
-	/** Starting constant value for SAd-related tags **/
+	/** Constant value for SAd-related tags **/
 	private static final int SAD_BASE = 200;
 
-	/** Starting constant value for SAw-related tags **/
+	/** Constant value for SAw-related tags **/
 	private static final int SAW_BASE = 300;
 
-	/** Starting constant value for SAd-related tags for stability **/
+	/** Constant value for SAd-related tags for stability **/
 	private static final int SAD_STABILITY_BASE = 400;
 
-	/** Starting constant value for NetIotSim-related tags **/
+	/** Constant value for IotNetSim-related tags **/
 	private static final int IOT_BASE = 500;
+	
+	/** Constant value for NaturalEnv-related tags **/
+	private static final int IOT_NATURALENV_BASE = 600;
+
+	/** Constant value for IoV-related tags **/
+	private static final int IOV_BASE = 700;
+
+	/** Constant value for IoV-Holons-related tags **/
+	private static final int IOV_HOLON_BASE = 800;
 
 	
 	/** 
@@ -387,9 +396,6 @@ public class CloudSimTags {
 	/** This tag is used for the generic IoT Node receiving data */
 	public static final int IOT_NODE_RECEIVE_DATA_EVENT = IOT_BASE + 2;
 
-	/** This tag is used for sending data from sensors to the next node */
-	public static final int IOT_SENSOR_SEND_DATA_EVENT = IOT_BASE + 3;
-
 	/** This tag is used for a link node to receive data from a node  */
 	public static final int IOT_LINK_RECEIVE_DATA_EVENT = IOT_BASE + 4;
 	
@@ -422,6 +428,32 @@ public class CloudSimTags {
 	public static final int FOG_NODE_RECEIVE_DATA_EVENT = IOT_BASE + 30;
 	public static final int FOG_NODE_SEND_DATA_EVENT = IOT_BASE + 31;
 	public static final int FOG_NODE_ACT_EVENT = IOT_BASE + 32;
+	
+	
+	/** 
+	 * Starting IoTNetSim for NaturalEnvironment related tags 
+	*/
+	
+	/** This tag is used for sending data from sensors to the next node */
+	public static final int IOT_NATURALENV_SENSOR_SEND_DATA_EVENT = IOT_NATURALENV_BASE + 1;
+
+	
+	/** 
+	 * Starting IoTNetSim for IoV related tags 
+	*/
+	
+	public static final int IOV_PARKING_CHANGE_AVAILABILITY = IOV_BASE + 1;
+	public static final int IOV_CLOUD_RECEIVE_DATA_EVENT = IOV_BASE + 2;
+	public static final int IOV_RESTAURANT_OPEN = IOV_BASE + 3;
+	public static final int IOV_RESTAURANT_CLOSE = IOV_BASE + 4;
+	
+
+	/** 
+	 * Starting IoTNetSim for IoV-Holon related tags 
+	*/
+	
+	public static final int IOV_HOLON_PARKING_CHANGE_AVAILABILITY = IOV_HOLON_BASE + 1;
+	
 
 	
 	/** Private Constructor */

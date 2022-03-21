@@ -1,4 +1,4 @@
-package org.cloudbus.iotnetsim;
+package org.cloudbus.iotnetsim.iot.nodes;
 
 /**
  * Title:        IoTNetSim Toolkit
@@ -39,12 +39,14 @@ public enum IoTNodeType {
 	SMART_DEVICE,
 	SMART_HOME_DEVICE,
 	
+	//IoV nodes type
 	VEHICLE,
 	VEHICLE_ELECTRIC,
+	
 	PARKING,
 	TRAFFIC_CONTROL_UNIT,
-
 	FUEL_STATION,
 	ELEC_CHARGING_STATION,
 	RESTAURANT
+	
 }

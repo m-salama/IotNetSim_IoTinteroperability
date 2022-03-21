@@ -30,6 +30,7 @@ import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 import org.cloudbus.iotnetsim.IoTDatacenter;
+import org.cloudbus.iotnetsim.holon.IoTDatacenterHolon;
 
 /**
  * Title:        SAd/SAw CloudSim Toolkit
@@ -156,7 +157,7 @@ public class Setup {
 
 
 	/**
-	 * Creates the datacenter for IoTSim package.
+	 * Creates the datacenter for IoTNetSim package.
 	 */
 	public static IoTDatacenter createIoTDatacenter
 			(String name, List<? extends Host> hostList){
@@ -185,6 +186,44 @@ public class Setup {
 		IoTDatacenter datacenter = null;
 		try {
 			datacenter = new IoTDatacenter(
+					name, characteristics, new VmAllocationPolicyAdaptation(hostList), storageList, 0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return datacenter;
+	}
+
+	/**
+	 * Creates the datacenter for IoTNetSim-Holons package.
+	 */
+	public static IoTDatacenterHolon createIoTDatacenterHolon
+			(String name, List<? extends Host> hostList){
+
+		// 5. Create a DatacenterCharacteristics object that stores the properties of a data center: 
+		//	  architecture, OS, list of Machines, allocation policy: time- or space-shared, time zone
+		//    and its price (G$/Pe time unit).
+
+		String arch = "x86";      // system architecture
+		String os = "Linux";          // operating system
+		String vmm = "Xen";
+		double time_zone = 10.0;         // time zone this resource located
+		//double cost = 3.0;              // the cost of using processing in this resource
+		//double costPerMem = 0.05;		// the cost of using memory in this resource
+		//double costPerStorage = 0.1;	// the cost of using storage in this resource
+		//double costPerBw = 0.1;			// the cost of using bw in this resource
+		LinkedList<Storage> storageList = new LinkedList<Storage>();	//we are not adding SAN devices by now
+
+		DatacenterCharacteristics characteristics = new DatacenterCharacteristics(
+                arch, os, vmm, hostList, time_zone, 
+                Constants.COST_CPU[1], Constants.COST_Per_Mem[1], Constants.COST_Per_Storage[1], 
+                Constants.COST_Per_Bw[1]);
+
+		
+		// 6. Finally, we need to create a PowerDatacenter object.
+		IoTDatacenterHolon datacenter = null;
+		try {
+			datacenter = new IoTDatacenterHolon(
 					name, characteristics, new VmAllocationPolicyAdaptation(hostList), storageList, 0);
 		} catch (Exception e) {
 			e.printStackTrace();

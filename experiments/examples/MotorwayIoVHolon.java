@@ -20,15 +20,13 @@ import org.cloudbus.cloudsim.adv.Service;
 import org.cloudbus.cloudsim.adv.ServiceRequest;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.iotnetsim.GeographicRegion;
-import org.cloudbus.iotnetsim.IoTDatacenter;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.IoTNodePowerType;
 import org.cloudbus.iotnetsim.Location;
-import org.cloudbus.iotnetsim.iot.nodes.GatewayNode;
+import org.cloudbus.iotnetsim.holon.IoTDatacenterHolon;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
-import org.cloudbus.iotnetsim.iot.nodes.LinkNode;
-import org.cloudbus.iotnetsim.naturalenv.SensorNode;
-import org.cloudbus.iotnetsim.naturalenv.SensorType;
+import org.cloudbus.iotnetsim.iov.TrafficControlUnit;
+import org.cloudbus.iotnetsim.iov.holon.ParkingHolon;
 import org.cloudbus.iotnetsim.network.NetConnection;
 import org.cloudbus.iotnetsim.network.NetConnectionType;
 
@@ -55,13 +53,13 @@ import helper.Workload;
  */
 
 /**
- * NaturalEnvironmentIoT simple experiment
- * simulating the testbed of 1 location
- * running for 1 month
+ * MotorwayIoV with Holon simple experiment
+ * simulating 1 testbed
+ * running for x time
  *  
  */
 
-public class NaturalEnvIoT {
+public class MotorwayIoVHolon {
 	/**
 	 * Creates main() to run this example.
 	 *
@@ -75,12 +73,10 @@ public class NaturalEnvIoT {
 			String datasetsFolder = workingDir + "//experiments//datasets//";
 			String inputFolder_workload = workingDir + "/experiments//workload//";
 
-			OutputStream output = new FileOutputStream(workingDir + "//experiments//results//NaturalEnvIoT_output.txt");
+			OutputStream output = new FileOutputStream(workingDir + "//experiments//results//MotorwayIoV_output.txt");
 			Log.setOutput(output);	//Uncomment to write output log in the txt files
 			
-			Log.printLine("Starting NaturalEnvironmentIoT simple experiment...");
-			Log.printLine("simulating the testbed of 1 location");
-			Log.printLine("running for 1 month");
+			Log.printLine("Starting MotorwayIoV simple experiment...");
 
 			//record the start local time
 			LocalTime startTime = java.time.LocalTime.now();
@@ -97,7 +93,7 @@ public class NaturalEnvIoT {
 			List<AdvHost> hostList = new ArrayList<AdvHost>();
 			hostList = Setup.createAdvHostList(1, 3, 2);  //2 = VmSchedulerTimeShared
 			//create Datacenter
-			IoTDatacenter datacenter0 = Setup.createIoTDatacenter("Datacenter_0", hostList);
+			IoTDatacenterHolon datacenter0 = Setup.createIoTDatacenterHolon("Datacenter_0", hostList);
 
 			//create Broker
 			DynamicDatacenterBroker broker = Setup.createDynamicBroker();
@@ -128,7 +124,7 @@ public class NaturalEnvIoT {
 			// submit cloudlet list to the broker
 			broker.submitServiceRequestList(cloudletList);
 
-			//create one IoT testbed
+			//create one IoV testbed
 			createTestbed(datacenter0, configurations.ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
 
 			double lastClock = CloudSim.startSimulation();
@@ -158,57 +154,47 @@ public class NaturalEnvIoT {
 	private static void createTestbed(Datacenter datacenter, double readingInterval, String datasetsFolder) {
 		//create one IoT testbed
 		Log.printLine("Creating one testbed...");
-		GeographicRegion region = new GeographicRegion("Conwy_NorthWales", 100.00);
+		GeographicRegion region = new GeographicRegion("France", 100.00);
 
 		//create CloudServer
 		AdvHost cloudServer = Setup.createAdvHost(100, 3, 2);
+		
+		//create Parking
+		ParkingHolon parking_0 = new ParkingHolon(
+				"Parking_0",
+				new Location(200*100, 200*100, 0), 
+				IoTNodeType.PARKING,
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				100,
+				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+				);
 
-		//create GatewayNode
-		GatewayNode gatewayNode = new GatewayNode(
-				"GatewayNode", 
+		//create Restaurant 
+		
+		//create Fuel Station
+		
+		//create Electric Charging Station
+		
+		//create Traffic Control Unit
+		TrafficControlUnit trafficControlUnit_0 = new TrafficControlUnit(
+				"TrafficControlUnit", 
 				new Location(200*100, 200*100, 0), 
 				IoTNodeType.GATEWAY_Node, 
-				new NetConnection("conn_3G", new NetConnectionType(), 100.00), 
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
 				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
 				datacenter.getId(), 
 				readingInterval+CloudSim.getMinTimeBetweenEvents()*3, 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3);
+				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+				);
 
-		//create LinkNode
-		LinkNode relayNode = new LinkNode(
-				"RelayNode", 
-				new Location(300*100, 300*100, 0), 
-				IoTNodeType.LINK_NODE, 
-				new NetConnection("conn_longRadio", new NetConnectionType(), 100.00), 
-				new IoTNodePower(IoTNodePowerType.USB_CAHRGING, true, false, true, 100.00, 0.00, 0.00),
-				"GatewayNode", 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*2);
+		//create user smart phone
 
-		//create Sensors
-		for (int s=1; s<=3; s++) {
-			SensorNode tempSensor = new SensorNode(
-					"TempSensor"+s, 
-					new Location(400+s*100, 400+s*100, 0), 
-					IoTNodeType.SENSOR, 
-					new NetConnection("conn_shortRadio"+s, new NetConnectionType(), 100.00),
-					new IoTNodePower(IoTNodePowerType.BATTERY, false, true, false, 100, 0.1, 10.00),
-					"RelayNode", 
-					SensorType.AIR_Temperature_SENSOR, 
-					readingInterval, 
-					datasetsFolder+"ukcp09_mean-temperature_1month.csv");
-		}
-		for (int s=1; s<=3; s++) {
-			SensorNode percipSensor = new SensorNode(
-					"PercipSensor"+s, 
-					new Location(400+s*100, 400+s*100, 0), 
-					IoTNodeType.SENSOR, 
-					new NetConnection("conn_shortRadio"+s, new NetConnectionType(), 100.00),
-					new IoTNodePower(IoTNodePowerType.BATTERY, false, true, false, 100, 0.1, 10.00),
-					"RelayNode", 
-					SensorType.WATER_SurfaceFlow_SENSOR, 
-					readingInterval, 
-					datasetsFolder+"ukcp09_rainfall_1month.csv");
-		}
+		//create vehicle
+		
+		//create electric vehicle
+
 	}
 
 }

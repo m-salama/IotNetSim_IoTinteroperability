@@ -4,10 +4,10 @@
 package org.cloudbus.iotnetsim.iov;
 
 import org.cloudbus.iotnetsim.IoTNodePower;
-import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeMobile;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -32,6 +32,7 @@ public class UserSmartPhone extends IoTNode  implements IoTNodeMobile {
 		
 		this.currentLocation = location;
 	}
+	
 
 	public Location getCurrentLocation() {
 		return currentLocation;

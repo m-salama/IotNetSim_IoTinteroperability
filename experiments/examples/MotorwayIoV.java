@@ -23,12 +23,9 @@ import org.cloudbus.iotnetsim.GeographicRegion;
 import org.cloudbus.iotnetsim.IoTDatacenter;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.IoTNodePowerType;
-import org.cloudbus.iotnetsim.IoTNodeType;
 import org.cloudbus.iotnetsim.Location;
-import org.cloudbus.iotnetsim.iot.nodes.GatewayNode;
-import org.cloudbus.iotnetsim.iot.nodes.LinkNode;
-import org.cloudbus.iotnetsim.iot.nodes.SensorNode;
-import org.cloudbus.iotnetsim.iot.nodes.SensorType;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iov.Parking;
 import org.cloudbus.iotnetsim.iov.TrafficControlUnit;
 import org.cloudbus.iotnetsim.network.NetConnection;
 import org.cloudbus.iotnetsim.network.NetConnectionType;
@@ -127,7 +124,7 @@ public class MotorwayIoV {
 			// submit cloudlet list to the broker
 			broker.submitServiceRequestList(cloudletList);
 
-			//create one IoT testbed
+			//create one IoV testbed
 			createTestbed(datacenter0, configurations.ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
 
 			double lastClock = CloudSim.startSimulation();
@@ -162,31 +159,41 @@ public class MotorwayIoV {
 		//create CloudServer
 		AdvHost cloudServer = Setup.createAdvHost(100, 3, 2);
 		
+		//create Parking
+		Parking parking_0 = new Parking(
+				"Parking_0",
+				new Location(200*100, 200*100, 0), 
+				IoTNodeType.PARKING,
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				100,
+				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+				);
+
 		//create Restaurant 
 		
-		//create Parking
+		//create Fuel Station
+		
+		//create Electric Charging Station
 		
 		//create Traffic Control Unit
 		TrafficControlUnit trafficControlUnit_0 = new TrafficControlUnit(
 				"TrafficControlUnit", 
 				new Location(200*100, 200*100, 0), 
 				IoTNodeType.GATEWAY_Node, 
-				new NetConnection("conn_3G", new NetConnectionType(), 100.00), 
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
 				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
 				datacenter.getId(), 
 				readingInterval+CloudSim.getMinTimeBetweenEvents()*3, 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3);
+				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+				);
 
-		
-		//create Fuel Station
-		
-		//create Electric Charging Station
-		
+		//create user smart phone
+
 		//create vehicle
 		
 		//create electric vehicle
-		
-		//create user smart phone
 
 	}
 
