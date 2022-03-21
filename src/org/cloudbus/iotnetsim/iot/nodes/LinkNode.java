@@ -39,7 +39,7 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 
 public class LinkNode extends IoTNode {
 
-	private double forwardInterval;			//send readings every x seconds
+	protected double forwardInterval;			//send readings every x seconds
 	
 	private List<SensorReading> readingsData;
 	
@@ -87,10 +87,11 @@ public class LinkNode extends IoTNode {
 	public void processEvent(SimEvent ev) {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
-		// Execute sending sensor data 
+		// Execute receiving sensor data 
 		case CloudSimTags.IOT_LINK_RECEIVE_DATA_EVENT:
 			processReceiveData(ev);
 			break;
+		// Execute forward data 
 		case CloudSimTags.IOT_LINK_FORWARD_DATA_EVENT:
 			processForwardData();
 			break;

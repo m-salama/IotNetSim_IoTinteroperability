@@ -1,15 +1,15 @@
 package org.cloudbus.iotnetsim.iov;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Random;
 
+import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
-import org.cloudbus.iotnetsim.iot.nodes.GatewayNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
-import org.cloudbus.iotnetsim.naturalenv.SensorReading;
-import org.cloudbus.iotnetsim.naturalenv.SensorType;
+import org.cloudbus.iotnetsim.iot.nodes.LinkNode;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /** 
@@ -19,18 +19,20 @@ import org.cloudbus.iotnetsim.network.NetConnection;
  * 
  */
 
-public class TrafficControlUnit extends GatewayNode {
+public class TrafficControlUnit extends LinkNode {
+
+	//boolean variable to be set if the traffic alert in on/off (true/false)
+	private boolean isTrafficAlert;
+	
+	// interval for sending traffic alerts every x seconds
+	private double trafficAlertInterval;			
+
+	protected int currentExpDay;
+	protected int currentChangeIndex;
+	
 
 	public TrafficControlUnit(String name) {
 		super(name);
-		// TODO Auto-generated constructor stub
-	}
-
-	public TrafficControlUnit(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			int forwardNodeId) {
-		
-		super(name, location, nodeType, connection, power, forwardNodeId);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -44,36 +46,128 @@ public class TrafficControlUnit extends GatewayNode {
 
 	public TrafficControlUnit(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			int forwardNodeId,
-			double forwardInterval, double dataProcessingInterval) {
+			String forwardNodeName,
+			double forward_interval) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeId);
-		
-		this.forwardInterval = forwardInterval;
-		this.dataProcessingInterval = dataProcessingInterval;
-		
-		// initialise data structures
-		readingsDataReceived = new ArrayList<SensorReading>();
-		readingsDataAggregated = new HashMap<SensorType, Map<Double, Double>>();
+		super(name, location, nodeType, connection, power, forwardNodeName, forward_interval);		
 	}
 
 	public TrafficControlUnit(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName,
-			double forwardInterval, double dataProcessingInterval) {
+			String forwardNodeName, double forward_interval,
+			double traffic_alert_interval) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, forward_interval);
 		
-		this.forwardInterval = forwardInterval;
-		this.dataProcessingInterval = dataProcessingInterval;
-		
-		// initialise data structures
-		readingsDataReceived = new ArrayList<SensorReading>();
-		readingsDataAggregated = new HashMap<SensorType, Map<Double, Double>>();
+		this.trafficAlertInterval = traffic_alert_interval;
+		this.isTrafficAlert = false;
 	}
-	
-	public void sendTrafficAlert() {
+
+	@Override
+	public void startEntity() {
+		// TODO Auto-generated method stub
+		Log.printLine(getName() + " is starting...");				
 		
+		// schedule the first event for sending data
+		schedule(this.getId(), this.forwardInterval, CloudSimTags.IOT_LINK_FORWARD_DATA_EVENT);
+		
+		// schedule the first event for sending traffic alert
+		schedule(this.getId(), this.trafficAlertInterval, CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT);
+}
+
+	@Override
+	public void shutdownEntity() {
+		// TODO Auto-generated method stub
+		Log.printLine(getName() + " is shutting down...");		
+	}
+
+	@Override
+	public void processEvent(SimEvent ev) {
+		// TODO Auto-generated method stub
+		switch (ev.getTag()) {
+		case CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT:
+			sendTrafficAlert();
+			break;
+		case CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT:
+			cancelTrafficAlert();
+			break;
+
+		// other unknown tags are processed by this method
+		default:
+			processOtherEvent(ev);
+			break;
+		}				
+	}
+
+	
+	/**
+	 * sendTrafficAlert()
+	 * method for setting the traffic alert on
+	 */	
+	public void sendTrafficAlert() {
+		this.isTrafficAlert = true;
+		
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting traffic alert" 
+			+ " in Day " + currentExpDay
+			+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
+			);
+
+		// send data to Datacenter
+		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isTrafficAlert);
+
+		// schedule the event for setting this traffic alert off
+		Random random = new Random();  		
+		double cancelTime = random.nextDouble() * ((this.trafficAlertInterval - CloudSim.getMinTimeBetweenEvents()) + CloudSim.getMinTimeBetweenEvents());  
+		schedule(this.getId(), cancelTime, CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT);
+		
+		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+			// schedule the next event for sending traffic alert
+			schedule(this.getId(), trafficAlertInterval, CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT);
+		}		
+	}
+
+	/**
+	 * cancelTrafficAlert()
+	 * method for setting the traffic alert off at random time
+	 */	
+	public void cancelTrafficAlert() {
+		this.isTrafficAlert = false;
+
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is cancelling traffic alert" 
+			+ " in Day " + currentExpDay
+			+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
+			);
+
+		// send data to Datacenter
+		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isTrafficAlert);
+	}
+
+	/**
+	 * @return the isTrafficAlert
+	 */
+	public boolean isTrafficAlert() {
+		return isTrafficAlert;
+	}
+
+	/**
+	 * @param isTrafficAlert the isTrafficAlert to set
+	 */
+	public void setTrafficAlert(boolean isTrafficAlert) {
+		this.isTrafficAlert = isTrafficAlert;
+	}
+
+	/**
+	 * @return the trafficAlertInterval
+	 */
+	public double getTrafficAlertInterval() {
+		return trafficAlertInterval;
+	}
+
+	/**
+	 * @param trafficAlertInterval the trafficAlertInterval to set
+	 */
+	public void setTrafficAlertInterval(double trafficAlertInterval) {
+		this.trafficAlertInterval = trafficAlertInterval;
 	}
 
 
