@@ -25,6 +25,7 @@ public class Restaurant extends IoTNode {
 	protected double openingTime;
 	// closing time of the restaurant set by the seconds within the day
 	protected double closingTime;
+	
 	protected boolean isOpen;
 
 	protected int currentExpDay;
