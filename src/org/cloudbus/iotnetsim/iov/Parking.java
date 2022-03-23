@@ -93,7 +93,7 @@ public class Parking extends IoTNode {
 
 	private void processChangeParkingAvailability() {
 		
-		int pAvailability = getNewRandomAvailability(); 
+		int pAvailability = getNewAvailabilityRandom(); 
 
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing parking availability" 
 				+ " for Day " + currentExpDay
@@ -110,13 +110,13 @@ public class Parking extends IoTNode {
 		}
 	}
 
-	private int getNewRandomAvailability() {
+	private int getNewAvailabilityRandom() {
 		Random random = new Random();  		
 		int newAvailability = random.nextInt(this.totalParkingSlots);  
 		
-		if (currentChangeIndex < (24/(this.parkingChangeInterval/60/60))-1) {		//to get number of changes for this day
+		if (currentChangeIndex < (24/(this.parkingChangeInterval/60/60))-1) {		//to get all the changes for this day
 			currentChangeIndex +=1;
-		} else {	//reset the index to 0 t start a new day
+		} else {	//reset the change index to 0 and start a new day
 			currentExpDay +=1;
 			currentChangeIndex = 0;
 		}

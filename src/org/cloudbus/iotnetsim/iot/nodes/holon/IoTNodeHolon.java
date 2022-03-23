@@ -3,6 +3,8 @@
  */
 package org.cloudbus.iotnetsim.iot.nodes.holon;
 
+import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
@@ -29,6 +31,36 @@ public class IoTNodeHolon extends IoTNode implements IoTHolon  {
 
 		super(name, location, nodeType, connection, power, forwardNodeName);
 		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public void processEvent(SimEvent ev) {
+		// TODO Auto-generated method stub
+		switch (ev.getTag()) {
+		// Execute sending sensor data 
+		case CloudSimTags.IOT_HOLON_CREATE_HOLON:
+			processCreateHolon(SimEvent ev);
+			break;
+		case CloudSimTags.IOT_HOLON_REGISTER_HOLON:
+			processRegisterHolon();
+			break;
+		case CloudSimTags.IOT_HOLON_PARSE_HOLON:
+			processParseHolon();
+			break;
+		case CloudSimTags.IOT_HOLON_REQUEST_HOLON:
+			processRequestHolon();
+			break;
+
+		// other unknown tags are processed by this method
+		default:
+			processOtherEvent(ev);
+			break;
+		}				
+	}
+	
+	private void processCreateHolon(SimEvent ev) {
+		Holon evdata = ev.getData();
+		
 	}
 
 	
