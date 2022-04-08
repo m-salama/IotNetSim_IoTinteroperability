@@ -12,6 +12,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
+import experiments.configurations.*;
+
 /**
  * Class Restaurant
  * 
@@ -99,7 +101,7 @@ public class Restaurant extends IoTNode {
 	private void processCloseRestaurant() {		
 		this.isOpen = false;
 		
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			// schedule event for restaurant opening for next day
 			schedule(this.getId(), this.openingTime*(currentExpDay*24*60*60), CloudSimTags.IOV_RESTAURANT_OPEN);		
 		}

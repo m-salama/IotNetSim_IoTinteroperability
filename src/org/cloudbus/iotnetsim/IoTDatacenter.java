@@ -12,6 +12,7 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iov.IoVNodeType;
 import org.cloudbus.iotnetsim.naturalenv.SensorType;
@@ -28,7 +29,7 @@ import org.cloudbus.iotnetsim.naturalenv.SensorType;
  * 
  * Maria Salama, Yehia Elkhatib, and Gordon Blair. 2019. 
  * IoTNetSim: A Modelling and Simulation Platform for End-to-End IoT Services and Networking.
- * In Proceedings of the IEEE/ACM 12th International Conference on Utility and Cloud Computing (UCC â€™19), December 2â€“5, 2019, Auckland, New Zealand. 
+ * In Proceedings of the IEEE/ACM 12th International Conference on Utility and Cloud Computing (UCC ’19), December 2–5, 2019, Auckland, New Zealand. 
  * ACM, NewYork,NY, USA, 11 pages. 
  * https://doi.org/10.1145/3344341.3368820
  * 
@@ -43,10 +44,14 @@ import org.cloudbus.iotnetsim.naturalenv.SensorType;
 
 public class IoTDatacenter extends Datacenter {
 
-	//NaturalEnv data
-	protected Map<SensorType, Map<Double, Double>> readingsData; 		//storing data, k: SensorType, v: (reading time, reading value) 
-	//IoV data
-	protected Map<IoVNodeType, Map<Double, Double>> dataIoV; 			//storing data, k: NodeType, v: (time, value) 
+	// list of Nodes
+	private List<IoTNode> lstNodes;
+	
+	//NaturalEnv data, data structure for storing data, k: SensorType, v: (reading time, reading value) 
+	//protected Map<SensorType, Map<Double, Double>> readingsData; 	
+	
+	//IoV data, data structure for storing data, k: IoTNode, v: (time, value) 
+	protected Map<IoTNode, Map<Double, Object>> dataIoV; 			
 	
 	
 	/**
@@ -81,7 +86,7 @@ public class IoTDatacenter extends Datacenter {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 
 		// initialise data structures
-		readingsData = new HashMap<SensorType, Map<Double, Double>>();
+		dataIoV = new HashMap<IoTNode, Map<Double, Object>>();
 	}
 
 	/**
@@ -96,10 +101,6 @@ public class IoTDatacenter extends Datacenter {
 		super.processEvent(ev);
 
 		switch (ev.getTag()) {
-		// process receiving data from Gateway Node in the NaturalEnv
-		case CloudSimTags.IOT_CLOUD_RECEIVE_DATA_EVENT:
-			receiveAndStoreData(ev);
-			break;
 		//process data received (storing, alerting..)
 		case CloudSimTags.IOT_CLOUD_PROCESS_DATA_EVENT:
 			processData(ev);
@@ -113,54 +114,27 @@ public class IoTDatacenter extends Datacenter {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void receiveAndStoreData(SimEvent ev) {
-		Map<SensorType, Map<Double, Double>> evdata = new HashMap<SensorType, Map<Double, Double>>();
-		evdata = (Map<SensorType, Map<Double, Double>>) ev.getData();
-		
-		int senderId = ev.getSource();
-		
-		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving aggregated data from " + CloudSim.getEntityName(senderId));
-
-		//create a data structure for each SensorType
-		for (SensorType t : SensorType.values()) {
-			readingsData.computeIfAbsent(t, ignored -> new HashMap<>());
-		}
-
-		//put data entries for each SensorType
-		for (Map.Entry<SensorType, Map<Double, Double>> e : evdata.entrySet()) {
-			readingsData.get(e.getKey()).putAll(e.getValue());
-		}
-		//evdata.forEach((t, readings) -> readingsData.putIfAbsent(t, readings));
-		
-		//storing data
-		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is storing the readings: ");
-		evdata.forEach((t, readings) -> Log.printLine("Sensor Type: " + t.name() 
-											+ " values: " + readings.values().toString() ));	
-		Log.printLine();
-	}
-
-	@SuppressWarnings("unchecked")
 	public void receiveAndStoreIoVData(SimEvent ev) {
-		Map<IoVNodeType, Map<Double, Double>> evdata = new HashMap<IoVNodeType, Map<Double, Double>>();
-		evdata = (Map<IoVNodeType, Map<Double, Double>>) ev.getData();
+		Map<IoTNode, Map<Double, Object>> evdata = new HashMap<IoTNode, Map<Double, Object>>();
+		evdata = (Map<IoTNode, Map<Double, Object>>) ev.getData();
 		
 		int senderId = ev.getSource();
 		
 		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving data from " + CloudSim.getEntityName(senderId));
 
-		//create a data structure for each NodeType
-		for (IoVNodeType t : IoVNodeType.values()) {
+		//create a data structure for each Node
+		for (IoTNode t : lstNodes) {
 			dataIoV.computeIfAbsent(t, ignored -> new HashMap<>());
 		}
 
-		//put data entries for each SensorType
-		for (Map.Entry<IoVNodeType, Map<Double, Double>> e : evdata.entrySet()) {
+		//put data entries for each node
+		for (Map.Entry<IoTNode, Map<Double, Object>> e : evdata.entrySet()) {
 			dataIoV.get(e.getKey()).putAll(e.getValue());
 		}
 		
 		//storing data
 		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is storing IoV data: ");
-		evdata.forEach((t, data) -> Log.printLine("Node Type: " + t.name() 
+		evdata.forEach((t, data) -> Log.printLine("Node: " + t.getName() 
 											+ " values: " + data.values().toString() ));	
 		Log.printLine();
 	}
@@ -169,19 +143,11 @@ public class IoTDatacenter extends Datacenter {
 
 	}
 
-	public Map<SensorType, Map<Double, Double>> getReadingsData() {
-		return readingsData;
-	}
-
-	public void setReadingsData(Map<SensorType, Map<Double, Double>> readingsData) {
-		this.readingsData = readingsData;
-	}
-
-	public Map<IoVNodeType, Map<Double, Double>> getIoVData() {
+	public Map<IoTNode, Map<Double, Object>> getIoVData() {
 		return dataIoV;
 	}
 
-	public void setIoVData(Map<IoVNodeType, Map<Double, Double>> data) {
+	public void setIoVData(Map<IoTNode, Map<Double, Object>> data) {
 		this.dataIoV = data;
 	}
 

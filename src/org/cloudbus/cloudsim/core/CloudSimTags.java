@@ -449,13 +449,22 @@ public class CloudSimTags {
 	public static final int IOV_STATION_CHANGE_AVAILABILITY = IOV_BASE + 5;
 	public static final int IOV_TRAFFIC_ALERT_SEND_EVENT = IOV_BASE + 6;
 	public static final int IOV_TRAFFIC_ALERT_CANCEL_EVENT = IOV_BASE + 7;
+	public static final int IOV_VEHICLE_FUEL_CONSUMPTION = IOV_BASE + 8;
+	public static final int IOV_VEHICLE_FUEL_REFILL = IOV_BASE + 9;
 
 	/** 
 	 * Starting IoTNetSim for IoV-Holon related tags 
 	*/
 	
 	public static final int IOV_HOLON_PARKING_CHANGE_AVAILABILITY = IOV_HOLON_BASE + 1;
-	
+
+	public static final int IOV_HOLON_CREATE_HOLON = IOV_HOLON_BASE + 2;
+	public static final int IOV_HOLON_REGISTER_HOLON = IOV_HOLON_BASE + 3;
+	public static final int IOV_HOLON_PARSE_HOLON = IOV_HOLON_BASE + 4;
+	public static final int IOV_HOLON_REQUEST_HOLON_BY_TYPE = IOV_HOLON_BASE + 5;	
+	public static final int IOV_HOLON_REQUEST_HOLON_BY_ID = IOV_HOLON_BASE + 6;
+	public static final int IOV_HOLON_RECEIVE_HOLON = IOV_HOLON_BASE + 7;
+	public static final int IOV_HOLON_WORKFLOW = IOV_HOLON_BASE + 8;
 
 	
 	/** Private Constructor */

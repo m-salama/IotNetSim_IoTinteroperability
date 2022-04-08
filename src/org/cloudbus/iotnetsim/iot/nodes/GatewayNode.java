@@ -15,6 +15,7 @@ import org.cloudbus.iotnetsim.naturalenv.SensorNode;
 import org.cloudbus.iotnetsim.naturalenv.SensorReading;
 import org.cloudbus.iotnetsim.naturalenv.SensorType;
 import org.cloudbus.iotnetsim.network.NetConnection;
+import experiments.configurations.*;
 
 /**
  * Title:        IoTNetSim Toolkit
@@ -164,7 +165,7 @@ public class GatewayNode extends IoTNode {
 			//send aggregated data to the Cloud
 			schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOT_CLOUD_RECEIVE_DATA_EVENT, readingsDataAggregated);
 
-			if (readingsDataReceived.get(readingsDataReceived.size()-1).getReadingDay() < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+			if (readingsDataReceived.get(readingsDataReceived.size()-1).getReadingDay() < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 				// schedule the next event for forwarding data 
 				scheduleNextForward();
 			}

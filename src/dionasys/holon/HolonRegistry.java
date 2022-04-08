@@ -3,11 +3,15 @@
  */
 package dionasys.holon;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.iotnetsim.iot.nodes.holon.IoTNodeHolon;
 import org.semanticweb.owlapi.model.OWLOntology;
+
+import com.google.common.collect.HashBasedTable;
 
 /**
  * @author elhabbash
@@ -15,24 +19,34 @@ import org.semanticweb.owlapi.model.OWLOntology;
  */
 public class HolonRegistry {
 
-    Map<OWLOntology,String> lstHolons;
+    
+	HashBasedTable<String,String,OWLOntology> lstHolons; //<type, name,ontology>
     
     public HolonRegistry(){
-        lstHolons = new ConcurrentHashMap<>();
+        lstHolons = HashBasedTable.create();
     }
     
-    public ArrayList<OWLOntology> getHolon(String type){
-        ArrayList<OWLOntology> lst = new ArrayList<>();
-        for (OWLOntology entry : lstHolons.keySet()){
-            if(lstHolons.get(entry).equalsIgnoreCase(type)){
-                lst.add(entry);
-            }
-        }
-        return lst;
+    public OWLOntology getHolonByType(String type){
+       	Map<String,OWLOntology> candidateHolons = lstHolons.row(type);
+    	Iterator<String> iter = candidateHolons.keySet().iterator();
+    	if(iter.hasNext()) {
+    		return candidateHolons.get(iter.next());
+    	}
+    	return null;
     }
     
-    public void registerHolon(OWLOntology model, String type){
-    	lstHolons.put(model, type);
+    public OWLOntology getHolonByName(String name){
+       	Map<String,OWLOntology> candidateHolons = lstHolons.column(name);
+    	Iterator<String> iter = candidateHolons.keySet().iterator();
+    	if(iter.hasNext()) {
+    		return candidateHolons.get(iter.next());
+    	}
+    	return null;
+    }
+    
+    public void registerHolon(String type, String node, OWLOntology model){
+    	lstHolons.put(type, node, model);
+    	Log.printLine(CloudSim.clock() + ": Holon " + node + " registered" );
     }
 
 }

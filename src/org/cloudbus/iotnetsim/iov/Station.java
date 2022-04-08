@@ -12,6 +12,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
+import experiments.configurations.*;
+
 /**
  * Class Station
  * for service station of fuel and electric cars based on the VehicleType
@@ -99,7 +101,7 @@ public class Station extends IoTNode  {
 		if (CloudSim.clock() >= currentExpDay*24*60*60) {
 			currentExpDay +=1;
 		}
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			//schedule the next event for updating the station availability at random time
 			scheduleNextChangeRandom(); 
 		}

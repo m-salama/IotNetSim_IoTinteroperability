@@ -1,4 +1,4 @@
-package workload;
+package experiments.workload;
 
 import java.util.Random;
 

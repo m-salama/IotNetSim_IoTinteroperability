@@ -4,15 +4,10 @@
 package dionasys.holon;
 
 import java.io.IOException;
-import java.rmi.registry.Registry;
-import java.util.ArrayList;
 
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 
 import dionasys.holon.datamodel.HolonDataModel;
 import dionasys.holon.datamodel.OntologyCreator;
@@ -22,22 +17,32 @@ import dionasys.holon.datamodel.OntologyCreator;
  *
  */
 
-public class Holon {
+public class Holon{
 
-   private HolonDataModel holonDataModel;    
-   private String type;
+   protected HolonDataModel holonDataModel;    
    protected HolonRegistry holonsRegistry;
+   protected int forwardNodeId;
    
-   private OWLOntology receivedOntology;    
-   private OWLOntology ontologyModel;
-   private Table<String,HolonDataModel,Double> servicesTree = HashBasedTable.create();
+   protected OWLOntology receivedOntology;    
+   protected OWLOntology ontologyModel;
 
+   /*
    public Holon(HolonDataModel model, String type, HolonRegistry registry) {
-       this.holonDataModel = model;    
+       this.holonDataModel = model;  
        this.type = type;
        this.holonsRegistry = registry;   
        createOntology();
        registry.registerHolon(ontologyModel, type);
+   }
+   */
+   
+   public Holon() {   
+   }
+   
+   public Holon(HolonDataModel model) {
+       this.holonDataModel = model;  
+       //createOntology();
+       //register holon
    }
    
    public void createOntology(){
@@ -48,12 +53,13 @@ public class Holon {
        }
    }
    
-   public void reRegister(){
-	   holonsRegistry.registerHolon(ontologyModel, type);
+   public void reRegister(String name){
+	   holonsRegistry.registerHolon(this.getHolonDataModel().getData("type"), 
+			   name, ontologyModel);
    }
        
-   public ArrayList<OWLOntology> lookupHolon(String type){
-       return holonsRegistry.getHolon(type);
+   public void setHolonDataModel(HolonDataModel dataModel){
+       this.holonDataModel = dataModel;
    }
    
    public HolonDataModel getHolonDataModel(){
@@ -62,17 +68,5 @@ public class Holon {
    
    public OWLOntology getOntologyModel(){
        return ontologyModel;
-   }
-   
-   public Table getServicesTree(){
-       return servicesTree;
-   }
-   
-   public void printServicesTree() {
-       for (String serviceName : servicesTree.rowKeySet()) {
-           for (HolonDataModel holonModel : servicesTree.columnKeySet()) {            
-               System.out.println(serviceName + " " + holonModel.getName() + " " + servicesTree.get(serviceName, holonModel));
-           }
-       }
    }
 }

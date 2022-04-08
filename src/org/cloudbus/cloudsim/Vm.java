@@ -14,7 +14,7 @@ import java.util.List;
 import org.cloudbus.cloudsim.adv.ServiceRequest;
 import org.cloudbus.cloudsim.adv.ServiceRequestScheduler;
 
-import helper.Constants;
+import experiments.helper.Constants;
 
 /**
  * Vm represents a VM: it runs inside a Host, sharing hostList with other VMs. It processes

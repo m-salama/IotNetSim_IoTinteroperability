@@ -1,4 +1,4 @@
-package examples;
+package experiments.examples;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -20,19 +20,19 @@ import org.cloudbus.cloudsim.adv.Service;
 import org.cloudbus.cloudsim.adv.ServiceRequest;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.iotnetsim.GeographicRegion;
+import org.cloudbus.iotnetsim.IoTDatacenter;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.IoTNodePowerType;
 import org.cloudbus.iotnetsim.Location;
-import org.cloudbus.iotnetsim.holon.IoTDatacenterHolon;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iov.Parking;
 import org.cloudbus.iotnetsim.iov.TrafficControlUnit;
-import org.cloudbus.iotnetsim.iov.holon.ParkingHolon;
 import org.cloudbus.iotnetsim.network.NetConnection;
 import org.cloudbus.iotnetsim.network.NetConnectionType;
 
-import configurations.ExperimentsConfigurations;
-import helper.Setup;
-import helper.Workload;
+import experiments.configurations.ExperimentsConfigurations;
+import experiments.helper.Setup;
+import experiments.helper.Workload;
 
 /**
  * Title:        IoTNetSim Toolkit
@@ -53,13 +53,13 @@ import helper.Workload;
  */
 
 /**
- * MotorwayIoV with Holon simple experiment
+ * MotorwayIoV simple experiment
  * simulating 1 testbed
  * running for x time
  *  
  */
 
-public class MotorwayIoVHolon {
+public class MotorwayIoV {
 	/**
 	 * Creates main() to run this example.
 	 *
@@ -93,7 +93,7 @@ public class MotorwayIoVHolon {
 			List<AdvHost> hostList = new ArrayList<AdvHost>();
 			hostList = Setup.createAdvHostList(1, 3, 2);  //2 = VmSchedulerTimeShared
 			//create Datacenter
-			IoTDatacenterHolon datacenter0 = Setup.createIoTDatacenterHolon("Datacenter_0", hostList);
+			IoTDatacenter datacenter0 = Setup.createIoTDatacenter("Datacenter_0", hostList);
 
 			//create Broker
 			DynamicDatacenterBroker broker = Setup.createDynamicBroker();
@@ -125,7 +125,7 @@ public class MotorwayIoVHolon {
 			broker.submitServiceRequestList(cloudletList);
 
 			//create one IoV testbed
-			createTestbed(datacenter0, configurations.ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
+			createTestbed(datacenter0, ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
 
 			double lastClock = CloudSim.startSimulation();
 
@@ -160,7 +160,7 @@ public class MotorwayIoVHolon {
 		AdvHost cloudServer = Setup.createAdvHost(100, 3, 2);
 		
 		//create Parking
-		ParkingHolon parking_0 = new ParkingHolon(
+		Parking parking_0 = new Parking(
 				"Parking_0",
 				new Location(200*100, 200*100, 0), 
 				IoTNodeType.PARKING,
@@ -178,16 +178,16 @@ public class MotorwayIoVHolon {
 		//create Electric Charging Station
 		
 		//create Traffic Control Unit
-		TrafficControlUnit trafficControlUnit_0 = new TrafficControlUnit(
-				"TrafficControlUnit", 
-				new Location(200*100, 200*100, 0), 
-				IoTNodeType.GATEWAY_Node, 
-				new NetConnection("wifi", new NetConnectionType(), 100.00), 
-				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
-				datacenter.getId(), 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3, 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
-				);
+//		TrafficControlUnit trafficControlUnit_0 = new TrafficControlUnit(
+//				"TrafficControlUnit", 
+//				new Location(200*100, 200*100, 0), 
+//				IoTNodeType.GATEWAY_Node, 
+//				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+//				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+//				datacenter.getId(), 
+//				readingInterval+CloudSim.getMinTimeBetweenEvents()*3, 
+//				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+//				);
 
 		//create user smart phone
 

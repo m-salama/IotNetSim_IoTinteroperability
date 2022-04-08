@@ -18,6 +18,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
+import experiments.configurations.*;
+
 /**
  * Title:        IoTNetSim Toolkit
  * Description:  Modelling and Simulation for End-to-End IoT Services & Networking 
@@ -170,7 +172,7 @@ public class SensorNode extends IoTNode {
 		//send data to Link Node
 		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOT_LINK_RECEIVE_DATA_EVENT, reading);
 
-		if (currentReadingDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+		if (currentReadingDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			// schedule the next event for sending data 
 			scheduleNextReading();
 		}

@@ -1,4 +1,4 @@
-package examples;
+package experiments.examples;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -32,9 +32,9 @@ import org.cloudbus.iotnetsim.naturalenv.SensorType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 import org.cloudbus.iotnetsim.network.NetConnectionType;
 
-import configurations.ExperimentsConfigurations;
-import helper.Setup;
-import helper.Workload;
+import experiments.configurations.ExperimentsConfigurations;
+import experiments.helper.Setup;
+import experiments.helper.Workload;
 
 /**
  * Title:        IoTNetSim Toolkit
@@ -129,7 +129,7 @@ public class NaturalEnvIoT {
 			broker.submitServiceRequestList(cloudletList);
 
 			//create one IoT testbed
-			createTestbed(datacenter0, configurations.ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
+			createTestbed(datacenter0, ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
 
 			double lastClock = CloudSim.startSimulation();
 

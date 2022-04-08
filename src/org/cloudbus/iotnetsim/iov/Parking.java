@@ -12,6 +12,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
+import experiments.configurations.*;
+
 /**
  * Class Parking
  * 
@@ -104,7 +106,7 @@ public class Parking extends IoTNode {
 		//send data to Datacenter
 		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, pAvailability);
 
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			// schedule the next event for sending data 
 			scheduleNextChange();
 		}

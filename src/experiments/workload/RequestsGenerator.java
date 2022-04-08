@@ -1,4 +1,4 @@
-package workload;
+package experiments.workload;
 
 /**
  * Implements the generator of workloads for the broker.
