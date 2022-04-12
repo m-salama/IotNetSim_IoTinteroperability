@@ -11,6 +11,7 @@ import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.LinkNode;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /** 
@@ -39,18 +40,18 @@ public class TrafficControlUnit extends IoTNode {
 
 	public TrafficControlUnit(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName) {
+			String forwardNodeName, MessagingProtocol msgProtocol) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
 	public TrafficControlUnit(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName, double forward_interval,
+			String forwardNodeName, MessagingProtocol msgProtocol, double forward_interval,
 			double traffic_alert_interval) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		
 		this.trafficAlertInterval = traffic_alert_interval;
 		this.isTrafficAlert = false;
@@ -76,10 +77,10 @@ public class TrafficControlUnit extends IoTNode {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
 		case CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT:
-			sendTrafficAlert();
+			processSendTrafficAlert();
 			break;
 		case CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT:
-			cancelTrafficAlert();
+			processCancelTrafficAlert();
 			break;
 
 		// other unknown tags are processed by this method
@@ -93,7 +94,7 @@ public class TrafficControlUnit extends IoTNode {
 	 * sendTrafficAlert()
 	 * method for setting the traffic alert on
 	 */	
-	public void sendTrafficAlert() {
+	public void processSendTrafficAlert() {
 		this.isTrafficAlert = true;
 		
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting traffic alert" 
@@ -112,7 +113,7 @@ public class TrafficControlUnit extends IoTNode {
 	 * cancelTrafficAlert()
 	 * method for setting the traffic alert off at random time
 	 */	
-	public void cancelTrafficAlert() {
+	public void processCancelTrafficAlert() {
 		this.isTrafficAlert = false;
 
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is cancelling traffic alert" 

@@ -10,6 +10,7 @@ import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -40,17 +41,19 @@ public class Parking extends IoTNode {
 	}
 
 	public Parking(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName) {
+			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
+			String forwardNodeName, MessagingProtocol msgProtocol) {
 
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
 	public Parking(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName,
+			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
+			String forwardNodeName, MessagingProtocol msgProtocol,
 			int total_parkingSlots, double parking_change_interval) {
 
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 		
 		this.totalParkingSlots = total_parkingSlots;

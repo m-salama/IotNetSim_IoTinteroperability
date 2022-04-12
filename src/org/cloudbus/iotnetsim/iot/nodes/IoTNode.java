@@ -40,7 +40,8 @@ public abstract class IoTNode extends SimEntity {
 	private IoTNodeType nodeType ;
 	private NetConnection connection;
 	private IoTNodePower power;
-	private int forwardNodeId;
+	private int forwardNodeId; //the node to which this node will send data next
+	private MessagingProtocol messagingProtocol;
 
 
 	public IoTNode(String name) {
@@ -51,7 +52,7 @@ public abstract class IoTNode extends SimEntity {
 	
 	public IoTNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			int forwardNodeId) {
+			int forwardNodeId, MessagingProtocol msgProtocol) {
 		
 		super(name);
 		
@@ -60,11 +61,12 @@ public abstract class IoTNode extends SimEntity {
 		this.connection = connection;
 		this.power = power;
 		this.forwardNodeId = forwardNodeId;
+		this.messagingProtocol = msgProtocol;
 	}
 
 	public IoTNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName) {
+			String forwardNodeName, MessagingProtocol msgProtocol) {
 		
 		super(name);
 		
@@ -73,6 +75,7 @@ public abstract class IoTNode extends SimEntity {
 		this.connection = connection;
 		this.power = power;
 		this.forwardNodeId = CloudSim.getEntityId(forwardNodeName);
+		this.messagingProtocol = msgProtocol;
 	}
 
 	public void startEntity() {
@@ -161,6 +164,21 @@ public abstract class IoTNode extends SimEntity {
 
 	public void setForwardNodeId(int forwardNodeId) {
 		this.forwardNodeId = forwardNodeId;
+	}
+
+	/**
+	 * @return the messagingProtocol
+	 */
+	public MessagingProtocol getMessagingProtocol() {
+		return messagingProtocol;
+	}
+
+
+	/**
+	 * @param messagingProtocol the messagingProtocol to set
+	 */
+	public void setMessagingProtocol(MessagingProtocol messagingProtocol) {
+		this.messagingProtocol = messagingProtocol;
 	}
 	
 	

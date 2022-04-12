@@ -50,18 +50,18 @@ public class LinkNode extends IoTNode {
 	}
 
 	public LinkNode(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName) {
+			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName, MessagingProtocol msgProtocol) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
 	
 	public LinkNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName,
-			double forwardInterval) {
+			double forwardInterval, MessagingProtocol msgProtocol) {
 	
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		
 		this.forwardInterval = forwardInterval;
 		

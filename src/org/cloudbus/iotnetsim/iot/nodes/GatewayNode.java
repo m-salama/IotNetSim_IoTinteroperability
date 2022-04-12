@@ -58,26 +58,26 @@ public class GatewayNode extends IoTNode {
 
 	public GatewayNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			int forwardNodeId) {
+			int forwardNodeId, MessagingProtocol msgProtocol) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeId);
+		super(name, location, nodeType, connection, power, forwardNodeId, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
 	public GatewayNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName) {
+			String forwardNodeName, MessagingProtocol msgProtocol) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
 	public GatewayNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			int forwardNodeId,
+			int forwardNodeId, MessagingProtocol msgProtocol,
 			double forwardInterval, double dataProcessingInterval) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeId);
+		super(name, location, nodeType, connection, power, forwardNodeId, msgProtocol);
 		
 		this.forwardInterval = forwardInterval;
 		this.dataProcessingInterval = dataProcessingInterval;
@@ -89,10 +89,10 @@ public class GatewayNode extends IoTNode {
 
 	public GatewayNode(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName,
+			String forwardNodeName, MessagingProtocol msgProtocol,
 			double forwardInterval, double dataProcessingInterval) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		
 		this.forwardInterval = forwardInterval;
 		this.dataProcessingInterval = dataProcessingInterval;

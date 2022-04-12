@@ -10,6 +10,7 @@ package org.cloudbus.iotnetsim.iov;
 public enum VehicleType {
 	
 	FUEL_VEHICLE,
-	ELECTRIC_VEHICLE
+	ELECTRIC_VEHICLE,
+	HYBRID_VEHICLE
 
 }

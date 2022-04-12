@@ -447,8 +447,10 @@ public class CloudSimTags {
 	public static final int IOV_RESTAURANT_OPEN = IOV_BASE + 3;
 	public static final int IOV_RESTAURANT_CLOSE = IOV_BASE + 4;
 	public static final int IOV_STATION_CHANGE_AVAILABILITY = IOV_BASE + 5;
-	public static final int IOV_TRAFFIC_ALERT_SEND_EVENT = IOV_BASE + 6;
-	public static final int IOV_TRAFFIC_ALERT_CANCEL_EVENT = IOV_BASE + 7;
+	public static final int IOV_STATION_CHANGE_PRICE = IOV_BASE + 6;
+	public static final int IOV_TRAFFIC_ALERT_SEND_EVENT = IOV_BASE + 7;
+	public static final int IOV_TRAFFIC_ALERT_CANCEL_EVENT = IOV_BASE + 8;
+	public static final int IOV_VEHICLE_MOVE = IOV_BASE + 9;
 
 	/** 
 	 * Starting IoTNetSim for IoV-Holon related tags 

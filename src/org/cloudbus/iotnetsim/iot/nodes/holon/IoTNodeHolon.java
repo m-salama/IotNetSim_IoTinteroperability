@@ -9,6 +9,7 @@ import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -27,9 +28,10 @@ public class IoTNodeHolon extends IoTNode implements IoTHolon  {
 	}
 
 	public IoTNodeHolon(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName) {
+			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
+			String forwardNodeName, MessagingProtocol msgProtocol) {
 
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
