@@ -26,8 +26,13 @@ import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.IoTNodePowerType;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.iov.Parking;
+import org.cloudbus.iotnetsim.iov.Station;
 import org.cloudbus.iotnetsim.iov.TrafficControlUnit;
+import org.cloudbus.iotnetsim.iov.UserSmartPhone;
+import org.cloudbus.iotnetsim.iov.Vehicle;
+import org.cloudbus.iotnetsim.iov.VehicleType;
 import org.cloudbus.iotnetsim.network.NetConnection;
 import org.cloudbus.iotnetsim.network.NetConnectionType;
 
@@ -126,7 +131,7 @@ public class MotorwayIoV {
 			broker.submitServiceRequestList(cloudletList);
 
 			//create one IoV testbed
-			createTestbed(datacenter0, configurations.ExperimentsConfigurations.READING_INTERVAL[0], datasetsFolder);
+			createTestbed(datacenter0, configurations.ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0], datasetsFolder);
 
 			double lastClock = CloudSim.startSimulation();
 
@@ -152,7 +157,7 @@ public class MotorwayIoV {
 		}
 	}
 
-	private static void createTestbed(Datacenter datacenter, double readingInterval, String datasetsFolder) {
+	private static void createTestbed(Datacenter datacenter, double data_update_interval, String datasetsFolder) {
 		//create one IoT testbed
 		Log.printLine("Creating one testbed...");
 		GeographicRegion region = new GeographicRegion("France", 100.00);
@@ -160,41 +165,63 @@ public class MotorwayIoV {
 		//create CloudServer
 		AdvHost cloudServer = Setup.createAdvHost(100, 3, 2);
 		
-		//create Parking
-		Parking parking_0 = new Parking(
-				"Parking_0",
-				new Location(200*100, 200*100, 0), 
-				IoTNodeType.PARKING,
+		//create user smart phone
+		UserSmartPhone userSmartPhone_0 = new UserSmartPhone(
+				"UserSmartPhone_0",
+				new Location(0, 0, 0),
+				IoTNodeType.USER_SMART_PHONE,
+				new NetConnection("4G", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.BATTERY, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP
+				);
+		
+		//create vehicle
+		Vehicle vehicle_0 = new Vehicle(
+				"Vehicle_0",
+				new Location(0, 0, 0),
+				IoTNodeType.VEHICLE,
+				new NetConnection("4G", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.FUEL, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP,
+				VehicleType.FUEL_VEHICLE,
+				45.0, 25.0, 10.0, 60.0, 45.0
+				);
+		
+		//create electric vehicle
+
+		//create Fuel Station
+		Station station_0 = new Station(
+				"Station_0",
+				new Location(10, 10, 10),
+				IoTNodeType.STATION,
 				new NetConnection("wifi", new NetConnectionType(), 100.00), 
 				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
 				datacenter.getName(), 
-				100,
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+				MessagingProtocol.HTTP,
+				VehicleType.FUEL_VEHICLE,
+				10.0
 				);
-
-		//create Restaurant 
-		
-		//create Fuel Station
 		
 		//create Electric Charging Station
 		
-		//create Traffic Control Unit
-		TrafficControlUnit trafficControlUnit_0 = new TrafficControlUnit(
-				"TrafficControlUnit", 
-				new Location(200*100, 200*100, 0), 
-				IoTNodeType.GATEWAY_Node, 
-				new NetConnection("wifi", new NetConnectionType(), 100.00), 
-				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
-				datacenter.getId(), 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3, 
-				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
-				);
+		//create Parking
+//		Parking parking_0 = new Parking(
+//				"Parking_0",
+//				new Location(200*100, 200*100, 0), 
+//				IoTNodeType.PARKING,
+//				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+//				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+//				datacenter.getName(), 
+//				MessagingProtocol.HTTP,
+//				100,
+//				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
+//				);
 
-		//create user smart phone
-
-		//create vehicle
+		//create Restaurant 
 		
-		//create electric vehicle
+		//create Traffic Control Unit
 
 	}
 

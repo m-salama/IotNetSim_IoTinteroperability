@@ -1,5 +1,6 @@
 package org.cloudbus.iotnetsim;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,14 +45,11 @@ import org.cloudbus.iotnetsim.naturalenv.SensorType;
 
 public class IoTDatacenter extends Datacenter {
 
-	// list of Nodes
-	private List<IoTNode> lstNodes;
-	
-	//NaturalEnv data, data structure for storing data, k: SensorType, v: (reading time, reading value) 
+	//NaturalEnv data: data structure for storing data, k: SensorType, v: (reading time, reading value) 
 	protected Map<SensorType, Map<Double, Double>> readingsData; 	
 	
-	//IoV data, data structure for storing data, k: IoTNode, v: (time, value) 
-	protected Map<IoTNode, Map<Double, Object>> iovData; 			
+	//IoV data: data structure for storing data, k: IoTNodeI, v: availability 
+	protected Map<IoTNode, Boolean> iovData; 			
 	
 	
 	/**
@@ -85,9 +83,11 @@ public class IoTDatacenter extends Datacenter {
 	{
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 
-		// initialise data structures
-		//readingsData = new HashMap<SensorType, Map<Double, Double>>();
+		// initialise data structure of the NaturalEnv
+		readingsData = new HashMap<SensorType, Map<Double, Double>>();
 		
+		// initialise data structure of the IoV
+		iovData = new HashMap<IoTNode, Boolean>(); 
 	}
 
 	/**
@@ -110,19 +110,35 @@ public class IoTDatacenter extends Datacenter {
 		case CloudSimTags.IOT_CLOUD_PROCESS_DATA_EVENT:
 			processData(ev);
 			break;
-	// process receiving data from entities in IoV
+			
+		// IoV nodes connection with the datacenter
+		case CloudSimTags.IOV_NODE_CONNECTION_EVENT:
+			processIoVNodeConnection(ev.getSource(), (boolean) ev.getData());
+		// process receiving data from entities in IoV
 		case CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT:
 			receiveAndStoreIoVData(ev);
 			break;
-
+		// process 
+		case CloudSimTags.IOV_FIND_NEAREST_STATION_EVENT:
+			processFindNearestStation(ev);
+			break;
+		case CloudSimTags.IOV_FIND_NEAREST_PARKING_EVENT:
+			processFindNearestParking(ev);
+			break;
+		case CloudSimTags.IOV_FIND_NEAREST_RESTAURANT_EVENT:
+			processFindNearestRestaurant(ev);
+			break;
 		}
 	}
 	
+	/**
+	 * receiveAndStoreData for the NaturalEnv
+	 * 
+	 */
 	@SuppressWarnings("unchecked")
-	public void receiveAndStoreData(SimEvent ev) {
+	private void receiveAndStoreData(SimEvent ev) {
 		Map<SensorType, Map<Double, Double>> evdata = new HashMap<SensorType, Map<Double, Double>>();
 		evdata = (Map<SensorType, Map<Double, Double>>) ev.getData();
-		
 		int senderId = ev.getSource();
 		
 		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving aggregated data from " + CloudSim.getEntityName(senderId));
@@ -145,35 +161,117 @@ public class IoTDatacenter extends Datacenter {
 		Log.printLine();
 	}
 
-	@SuppressWarnings("unchecked")
-	public void receiveAndStoreIoVData(SimEvent ev) {
-		Map<IoTNode, Map<Double, Object>> evdata = new HashMap<IoTNode, Map<Double, Object>>();
-		evdata = (Map<IoTNode, Map<Double, Object>>) ev.getData();
+	/**
+	 * data processing for the NaturalEnv
+	 * 
+	 */
+	private void processData(SimEvent ev) {
+
+	}
+
+	/**
+	 * IoVNodeConnection for IoV
+	 * 
+	 */
+	private void processIoVNodeConnection(int nodeID, boolean isAvailable) {
+		// insert new entry for the node with availability set to true
+		iovData.putIfAbsent((IoTNode) CloudSim.getEntity(nodeID), isAvailable);
 		
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] connected with IoV node " + CloudSim.getEntityName(nodeID));
+	}
+
+	/**
+	 * receiveAndStoreData for ioV
+	 * 
+	 */
+	@SuppressWarnings({ "unlikely-arg-type" })
+	private void receiveAndStoreIoVData(SimEvent ev) {
 		int senderId = ev.getSource();
+		boolean availability = (boolean) ev.getData();
 		
 		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving data from " + CloudSim.getEntityName(senderId));
-
-		//create a data structure for each Node
-		for (IoTNode t : lstNodes) {
-			iovData.computeIfAbsent(t, ignored -> new HashMap<>());
-		}
-
-		//put data entries for each node
-		for (Map.Entry<IoTNode, Map<Double, Object>> e : evdata.entrySet()) {
-			iovData.get(e.getKey()).putAll(e.getValue());
+		
+		// add the received data to the IoV data store
+		iovData.put((IoTNode) CloudSim.getEntity(senderId), availability);
+		
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] stored latest IoV data from " + CloudSim.getEntityName(senderId));
+	}
+	
+	/**
+	 * FindNearestStation for IoV
+	 * 
+	 */
+	private void processFindNearestStation(SimEvent ev) {
+		Location userLocation = (Location) ev.getData();
+		int userID = ev.getSource();
+		
+		int stationID = -1;
+		
+		for (Map.Entry<IoTNode, Boolean> e : iovData.entrySet()) {
+			if(e.getKey().getNodeType() == IoTNodeType.STATION) {
+				if (e.getKey().getLocation().getX() == userLocation.getX()+10 || 
+						e.getKey().getLocation().getX() == userLocation.getX()-10 ||
+						e.getKey().getLocation().getY() == userLocation.getY()+10 ||
+						e.getKey().getLocation().getY() == userLocation.getY()-10) {
+					stationID = e.getKey().getId();
+				}
+			}
 		}
 		
-		//storing data
-		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is storing IoV data: ");
-		evdata.forEach((t, data) -> Log.printLine("Node: " + t.getName() 
-											+ " values: " + data.values().toString() ));	
-		Log.printLine();
+		// send the nearest station data to the UserSmartPhone
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_STATION_DATA_EVENT, stationID);		
 	}
-
-	public void processData(SimEvent ev) {
-
+	
+	/**
+	 * FindNearestParking for IoV
+	 * 
+	 */
+	private void processFindNearestParking(SimEvent ev) {
+		Location userLocation = (Location) ev.getData();
+		int userID = ev.getSource();
+		
+		int parkingID = -1;
+		
+		for (Map.Entry<IoTNode, Boolean> e : iovData.entrySet()) {
+			if(e.getKey().getNodeType() == IoTNodeType.PARKING) {
+				if (e.getKey().getLocation().getX() == userLocation.getX()+10 || 
+						e.getKey().getLocation().getX() == userLocation.getX()-10 ||
+						e.getKey().getLocation().getY() == userLocation.getY()+10 ||
+						e.getKey().getLocation().getY() == userLocation.getY()-10) {
+					parkingID = e.getKey().getId();
+				}
+			}
+		}
+		
+		// send the nearest station data to the UserSmartPhone
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_PARKING_DATA_EVENT, parkingID);		
 	}
+	
+	/**
+	 * processFindNearestRestaurant for IoV
+	 * 
+	 */
+	private void processFindNearestRestaurant(SimEvent ev) {
+		Location userLocation = (Location) ev.getData();
+		int userID = ev.getSource();
+		
+		int restaurantID = -1;
+		
+		for (Map.Entry<IoTNode, Boolean> e : iovData.entrySet()) {
+			if(e.getKey().getClass().getName() == "Restaurant") {
+				if (e.getKey().getLocation().getX() == userLocation.getX()+10 || 
+						e.getKey().getLocation().getX() == userLocation.getX()-10 ||
+						e.getKey().getLocation().getY() == userLocation.getY()+10 ||
+						e.getKey().getLocation().getY() == userLocation.getY()-10) {
+					restaurantID = e.getKey().getId();
+				}
+			}
+		}
+		
+		// send the nearest station data to the UserSmartPhone
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_RESTAURANT_DATA_EVENT, restaurantID);		
+	}
+	
 
 	public Map<SensorType, Map<Double, Double>> getReadingsData() {
 		return readingsData;
@@ -183,11 +281,11 @@ public class IoTDatacenter extends Datacenter {
 		this.readingsData = readingsData;
 	}
 
-	public Map<IoTNode, Map<Double, Object>> getIoVData() {
+	public Map<IoTNode, Boolean> getIoVData() {
 		return iovData;
 	}
 
-	public void setIoVData(Map<IoTNode, Map<Double, Object>> data) {
+	public void setIoVData(Map<IoTNode, Boolean> data) {
 		this.iovData = data;
 	}
 

@@ -4,6 +4,7 @@ import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeMobile;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
 /**
@@ -42,19 +43,19 @@ public class MobileSensor extends SensorNode implements IoTNodeMobile {
 	}
 
 	public MobileSensor(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName) {
+			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName, MessagingProtocol messaging_protocol) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, messaging_protocol);
 		// TODO Auto-generated constructor stub
 		
 		this.currentLocation = location;
 	}
 
 	public MobileSensor(String name, 
-			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName, 
+			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, String forwardNodeName, MessagingProtocol messaging_protocol,
 			SensorType sensorType, double readingInterval, String readingsFile) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName, sensorType, readingInterval, readingsFile);
+		super(name, location, nodeType, connection, power, forwardNodeName, messaging_protocol, sensorType, readingInterval, readingsFile);
 		// TODO Auto-generated constructor stub
 		
 		this.currentLocation = location;

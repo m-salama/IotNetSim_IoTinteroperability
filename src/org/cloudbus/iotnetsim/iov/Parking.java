@@ -28,6 +28,9 @@ public class Parking extends IoTNode {
 	// number of parking slots available 
 	protected int availableParkingSlots;
 	
+	// set to true of the number of parking slots available  is less than the total number of parking slots 
+	protected boolean isAvailable;
+	
 	// interval for changing parking availability every x seconds
 	protected double parkingChangeInterval;			
 
@@ -58,6 +61,8 @@ public class Parking extends IoTNode {
 		
 		this.totalParkingSlots = total_parkingSlots;
 		this.availableParkingSlots = total_parkingSlots;
+		this.isAvailable = true;
+		
 		this.parkingChangeInterval = parking_change_interval;
 		this.currentExpDay = 1;
 		this.currentChangeIndex = 0;
@@ -68,8 +73,14 @@ public class Parking extends IoTNode {
 		// TODO Auto-generated method stub
 		Log.printLine(getName() + " is starting...");
 
+		// connect to the datacenter
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is connecting to the Datacenter " 
+				+ CloudSim.getEntityName(getForwardNodeId())
+				);
+		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_NODE_CONNECTION_EVENT, isAvailable);
+		
 		// schedule the first event for parking
-		schedule(this.getId(), this.parkingChangeInterval, CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY);
+		schedule(this.getId(), this.parkingChangeInterval, CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY_EVENT);
 	}
 
 	@Override
@@ -82,8 +93,8 @@ public class Parking extends IoTNode {
 	public void processEvent(SimEvent ev) {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
-		// Execute sending sensor data 
-		case CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY:
+		// changing availability of the parking 
+		case CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY_EVENT:
 			processChangeParkingAvailability();
 			break;
 
@@ -94,18 +105,23 @@ public class Parking extends IoTNode {
 		}				
 	}
 
-	private void processChangeParkingAvailability() {
-		
-		int pAvailability = getNewAvailabilityRandom(); 
+	/**
+	 * processChangeParkingAvailability()
+	 */
+	private void processChangeParkingAvailability() {	
+		// get new availability
+		this.availableParkingSlots = getNewAvailabilityRandom(); 
+
+		this.isAvailable = (availableParkingSlots > 0);
 
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing parking availability" 
 				+ " for Day " + currentExpDay
-				+ " to " + Integer.toString(pAvailability) 
+				+ " to " + Integer.toString(availableParkingSlots) 
 				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
 				);
 
-		//send data to Datacenter
-		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, pAvailability);
+		// send data to Datacenter
+		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isAvailable);
 
 		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			// schedule the next event for sending data 
@@ -127,7 +143,7 @@ public class Parking extends IoTNode {
 	}
 
 	private void scheduleNextChange(){
-		schedule(this.getId(), this.getParkingChangeInterval(), CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY);
+		schedule(this.getId(), this.getParkingChangeInterval(), CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY_EVENT);
 	}
 
 	/**

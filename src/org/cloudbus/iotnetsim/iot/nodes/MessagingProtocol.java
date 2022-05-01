@@ -8,5 +8,12 @@ package org.cloudbus.iotnetsim.iot.nodes;
  *
  */
 public enum MessagingProtocol {
+	TCP,
+	FTP,
+	HTTP,
+	HTTPS,
+	TLS,
+	PPP, 
+	SOAP
 
 }

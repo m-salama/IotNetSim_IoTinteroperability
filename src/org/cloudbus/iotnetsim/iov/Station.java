@@ -30,7 +30,6 @@ public class Station extends IoTNode  {
 	private double price;		//cost per unit (e.g. per litre of fuel)
 
 	protected int currentExpDay;
-	protected int currentChangeIndex;
 
 
 	public Station(String name) {
@@ -64,11 +63,17 @@ public class Station extends IoTNode  {
 		// TODO Auto-generated method stub
 		Log.printLine(getName() + " is starting...");
 
+		// connect to the datacenter
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is connecting to the Datacenter " 
+				+ CloudSim.getEntityName(getForwardNodeId())
+				);
+		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_NODE_CONNECTION_EVENT, isAvailable);
+
 		// schedule the first event for the station to change its availability
-		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY, true);
+		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY_EVENT);
 
 		// schedule the first event for the station to change the price
-		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_STATION_CHANGE_PRICE, true);
+		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_STATION_CHANGE_PRICE_EVENT);
 	}
 
 	@Override
@@ -82,12 +87,16 @@ public class Station extends IoTNode  {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
 
-		case CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY:
+		case CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY_EVENT:
 			processChangeStationvailability();
 			break;
-		case CloudSimTags.IOV_STATION_CHANGE_PRICE:
+		case CloudSimTags.IOV_STATION_CHANGE_PRICE_EVENT:
 			processChangePriceRandom();
-
+			break;
+		case CloudSimTags.IOV_STATION_CHECK_PRICE_EVENT:
+			processCheckPrice(ev.getSource());
+			break;
+			
 			// other unknown tags are processed by this method
 		default:
 			processOtherEvent(ev);
@@ -95,6 +104,9 @@ public class Station extends IoTNode  {
 		}				
 	}
 
+	/**
+	 * processChangeStationvailability()
+	 */
 	private void processChangeStationvailability() {
 		this.isAvailable = !(this.isAvailable);
 
@@ -115,6 +127,9 @@ public class Station extends IoTNode  {
 		}	
 	}
 
+	/**
+	 * processChangePriceRandom()
+	 */
 	private void processChangePriceRandom() {
 		// get random price within a range -- min + (randomValue * (max - min))
 		double random = new Random().nextDouble();  		
@@ -127,12 +142,18 @@ public class Station extends IoTNode  {
 				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
 				);
 
-		//send update to Datacenter
-		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, price);
-
 		//schedule the next change on the next day
-		schedule(this.getId(), ((currentExpDay+1)*24*60*60), CloudSimTags.IOV_STATION_CHANGE_PRICE);
+		schedule(this.getId(), ((currentExpDay+1)*24*60*60), CloudSimTags.IOV_STATION_CHANGE_PRICE_EVENT);
 	}
+	
+	/**
+	 * processCheckPrice()
+	 */
+	private void processCheckPrice(int userID) {
+		// send the price to the user
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_STATION_PRICE_EVENT, this.price);	
+	}
+	
 
 	/**
 	 * schedule next event for changing station availability at random time
@@ -142,7 +163,7 @@ public class Station extends IoTNode  {
 		double random = new Random().nextDouble();  		
 		double rTime = CloudSim.getMinTimeBetweenEvents() + (random * ((24*60*60) - CloudSim.getMinTimeBetweenEvents()));  
 
-		schedule(this.getId(), rTime, CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY);
+		schedule(this.getId(), rTime, CloudSimTags.IOV_STATION_CHANGE_AVAILABILITY_EVENT);
 	}
 
 
