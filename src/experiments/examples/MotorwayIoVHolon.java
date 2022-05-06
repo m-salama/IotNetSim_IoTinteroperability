@@ -25,6 +25,7 @@ import org.cloudbus.iotnetsim.IoTNodePowerType;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.holon.IoTDatacenterHolon;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.iov.VehicleType;
 import org.cloudbus.iotnetsim.iov.holon.ParkingHolon;
 import org.cloudbus.iotnetsim.iov.holon.RestaurantHolon;
@@ -167,28 +168,26 @@ public class MotorwayIoVHolon {
 		AdvHost cloudServer = Setup.createAdvHost(100, 3, 2);
 
 		// create Parking
-//		ParkingHolon parking_0 = new ParkingHolon("Parking_0", new Location(200 * 100, 200 * 100, 0),
-//				IoTNodeType.PARKING, new NetConnection("wifi", new NetConnectionType(), 100.00),
-//				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
-//				datacenter.getName(), "MQTT", 100, readingInterval + CloudSim.getMinTimeBetweenEvents() * 3);
+		ParkingHolon parking_0 = new ParkingHolon("Parking_0", new Location(200 * 100, 200 * 100, 0),
+				IoTNodeType.PARKING, new NetConnection("wifi", new NetConnectionType(), 100.00),
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), MessagingProtocol.MQTT, 100, readingInterval + CloudSim.getMinTimeBetweenEvents() * 3);
 
 		// create Restaurant
 		RestaurantHolon restaurant_0 = new RestaurantHolon("restaurant_0", new Location(200 * 100, 200 * 100, 0),
 				IoTNodeType.RESTAURANT, new NetConnection("wifi", new NetConnectionType(), 100.00),
-				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), "MQTT",
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), MessagingProtocol.MQTT,
 				datacenter.getName(), 8.00, 18.00, true);
 
 		// create Fuel Station
 		StationHolon station_0 = new StationHolon("station_0", new Location(200 * 100, 200 * 100, 0),
-				IoTNodeType.FUEL_STATION, new NetConnection("wifi", new NetConnectionType(), 100.00),
-				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), "MQTT",
-				datacenter.getName(), VehicleType.FUEL_VEHICLE);
+				IoTNodeType.STATION, new NetConnection("wifi", new NetConnectionType(), 100.00),
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), MessagingProtocol.MQTT,
+				datacenter.getName(), VehicleType.FUEL_VEHICLE, 10.0);
 
-		// create Electric Charging Station
-//		StationHolon station_1 = new StationHolon("station_1", new Location(200 * 100, 200 * 100, 0),
-//				IoTNodeType.FUEL_STATION, new NetConnection("wifi", new NetConnectionType(), 100.00),
-//				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), "MQTT",
-//				datacenter.getName(), VehicleType.ELECTRIC_VEHICLE);
+
+		
+
 
 		// create Traffic Control Unit
 //		TrafficControlUnitHolon trafficControlUnit_0 = new TrafficControlUnitHolon("TrafficControlUnit_0",
@@ -203,8 +202,11 @@ public class MotorwayIoVHolon {
 		// create vehicle
 		VehicleHolon vehicle_0 = new VehicleHolon("vehicle_0", new Location(200 * 100, 200 * 100, 0),
 				IoTNodeType.VEHICLE, new NetConnection("wifi", new NetConnectionType(), 100.00),
-				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), "MQTT",
-				datacenter.getName(), VehicleType.FUEL_VEHICLE, 60,50, 1);
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), MessagingProtocol.MQTT,
+				datacenter.getName(), VehicleType.FUEL_VEHICLE, 60,50, 10,30,30);
+		
+
+		
 		// create electric vehicle
 //		VehicleHolon vehicle_1 = new VehicleHolon("vehicle_1", new Location(200 * 100, 200 * 100, 0),
 //				IoTNodeType.FUEL_STATION, new NetConnection("wifi", new NetConnectionType(), 100.00),
@@ -214,7 +216,7 @@ public class MotorwayIoVHolon {
 		UserSmartPhoneHolon smartPhone_0 = new UserSmartPhoneHolon("smartPhone_0","vehicle_0",
 				new Location(200 * 100, 200 * 100, 0), IoTNodeType.SMART_HOME_DEVICE,
 				new NetConnection("wifi", new NetConnectionType(), 100.00),
-				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), "MQTT",
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00), MessagingProtocol.MQTT,
 				datacenter.getName());
 	}
 }

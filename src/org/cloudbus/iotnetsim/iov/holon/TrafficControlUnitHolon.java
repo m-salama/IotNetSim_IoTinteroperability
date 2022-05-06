@@ -12,6 +12,7 @@ import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.LinkNode;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.iot.nodes.holon.IoTNodeHolon;
 import org.cloudbus.iotnetsim.iov.IoVNodeType;
 import org.cloudbus.iotnetsim.network.NetConnection;
@@ -46,7 +47,7 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 
 	public TrafficControlUnitHolon(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String messagingProtocol, String forwardNodeName) {
+			MessagingProtocol messagingProtocol, String forwardNodeName) {
 		
 		super(name, location, nodeType, connection, power, forwardNodeName);
 		// TODO Auto-generated constructor stub
@@ -56,7 +57,7 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 
 	public TrafficControlUnitHolon(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String messagingProtocol, String forwardNodeName, double forward_interval,
+			MessagingProtocol messagingProtocol, String forwardNodeName, double forward_interval,
 			double traffic_alert_interval) {
 		
 		super(name, location, nodeType, connection, power, forwardNodeName);
@@ -72,9 +73,16 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 		// TODO Auto-generated method stub
 		Log.printLine(getName() + " is starting...");
 		
+		// connect to the datacenter
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is connecting to the Datacenter " 
+				+ CloudSim.getEntityName(getForwardNodeId())
+				);
+		
 		// schedule the first event for parking to register the holon
 		schedule(dataCentre.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_HOLON_REGISTER_HOLON,
 				holon);
+		
+		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_NODE_CONNECTION_EVENT, isTrafficAlert);
 		// schedule the first event for sending traffic alert
 		scheduleSendTrafficAlert();	
 	}
@@ -90,11 +98,11 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 		// TODO Auto-generated method stub
 		super.processEvent(ev);
 		switch (ev.getTag()) {
-		case CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT:
-			sendTrafficAlert();
+		case CloudSimTags.IOV_TRAFFIC_ALERT_ON_EVENT:
+			processSendTrafficAlert();
 			break;
-		case CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT:
-			cancelTrafficAlert();
+		case CloudSimTags.IOV_TRAFFIC_ALERT_OFF_EVENT:
+			processCancelTrafficAlert();
 			break;
 
 		// other unknown tags are processed by this method
@@ -108,7 +116,7 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 	 * sendTrafficAlert()
 	 * method for setting the traffic alert on
 	 */	
-	public void sendTrafficAlert() {
+	public void processSendTrafficAlert() {
 		this.isTrafficAlert = true;
 		
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting traffic alert" 
@@ -117,7 +125,7 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 			);
 
 		// send data to Datacenter
-		scheduleNextSendDataEvent();
+		scheduleSendDataEvent();
 
 		// schedule the event for cancelling this traffic alert at random time
 		scheduleCancelTrafficAlertEventRandom();		
@@ -127,7 +135,7 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 	 * cancelTrafficAlert()
 	 * method for setting the traffic alert off at random time
 	 */	
-	public void cancelTrafficAlert() {
+	public void processCancelTrafficAlert() {
 		this.isTrafficAlert = false;
 
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is cancelling traffic alert" 
@@ -136,7 +144,7 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 			);
 
 		// send data to Datacenter
-		scheduleNextSendDataEvent();
+		scheduleSendDataEvent();
 		
 		if (CloudSim.clock() >= currentExpDay*24*60*60) {
 			currentExpDay +=1;
@@ -147,31 +155,32 @@ public class TrafficControlUnitHolon extends IoTNodeHolon {
 		}		
 	}
 	
-	private void scheduleSendTrafficAlert() {
-		schedule(this.getId(), this.trafficAlertInterval, CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT);
-	}
-	
 	private void scheduleCancelTrafficAlertEventRandom() {
 		// schedule the event for setting this traffic alert off
 		Random random = new Random();  		
 		double cancelTime = random.nextDouble() * ((this.trafficAlertInterval - CloudSim.getMinTimeBetweenEvents()) + CloudSim.getMinTimeBetweenEvents());  
-		schedule(this.getId(), cancelTime, CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT);
+		schedule(this.getId(), cancelTime, CloudSimTags.IOV_TRAFFIC_ALERT_OFF_EVENT);
 
 	}
-	private void scheduleNextSendDataEvent() {
+
+	private void scheduleSendDataEvent() {
 		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isTrafficAlert);		
+	}
+
+	private void scheduleSendTrafficAlert() {
+		schedule(this.getId(), this.trafficAlertInterval, CloudSimTags.IOV_TRAFFIC_ALERT_ON_EVENT);
 	}
 
 	
 	private HolonDataModel createDataModel(String name, 
-			Location location, String messagingProtocol) {
+			Location location, MessagingProtocol messagingProtocol) {
 		
 		HolonDataModel dataModel = new HolonDataModel();
         dataModel.putData("name",name);
         dataModel.putData("type", this.getNodeType().toString());
         dataModel.putData("latitude", location.getX()+"");
         dataModel.putData("longitude", location.getY()+"");
-        dataModel.putData("messagingProtocol",messagingProtocol);
+        dataModel.putData("messagingProtocol",messagingProtocol.toString());
         dataModel.putData("connecitonType", this.getConnection().getConnectionType().toString());
         dataModel.putData("powerType", this.getPower().getPowerType().toString());
         dataModel.putData("currentExpDay", currentExpDay +"");

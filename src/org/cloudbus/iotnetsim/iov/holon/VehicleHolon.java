@@ -11,6 +11,7 @@ import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeMobile;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.iot.nodes.holon.IoTNodeHolon;
 import org.cloudbus.iotnetsim.iov.IoVNodeType;
 import org.cloudbus.iotnetsim.iov.VehicleType;
@@ -32,12 +33,16 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 
 	private Location currentLocation;	
 	
-	//vehicleType enum attribute to specify the type of the vehicle, either fuel or electric 
+	//vehicleType enum attribute to specify the type of the vehicle, either fuel, electric or hybrid 
 	private VehicleType vehicleType;
-	private double currentRange;
-	private double consumptionRate;
-	private double maxRange;
-	private double rangeThreshold;
+	
+	private double fuelTankSize;			//in gallon
+	private double fuelConsumptionRate;		//in unit miles-per-gallon (mpg) 
+	private double fuelThreshold;			//in unit gallon, when threshold is reached, the fuel alert is on 
+
+	private double avgSpeed;				//in unit mile/hour
+	private double currentFuelLevel;		//in unit gallon, when full, set to the maxFuelCapacity
+	private boolean fuelAlert;				//boolean variable set to true if the currentFuelLevel is <= the fuelThreshold
 
 	
 	public VehicleHolon(String name, String messagingProtocol) {
@@ -47,7 +52,7 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 
 	public VehicleHolon(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String messagingProtocol, String forwardNodeName) {
+			MessagingProtocol messagingProtocol, String forwardNodeName) {
 		
 		super(name, location, nodeType, connection, power, forwardNodeName);
 		// TODO Auto-generated constructor stub
@@ -59,18 +64,19 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 
 	public VehicleHolon(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String messagingProtocol, String forwardNodeName,
-			VehicleType vType, double maxRange, double rangeThreshold, double consumptionRate) {
+			MessagingProtocol messagingProtocol, String forwardNodeName,
+			VehicleType vType, double tank_size, double fuel_consumption_rate, double fuel_threshold, double avg_speed, double fuel_level) {
 		
 		super(name, location, nodeType, connection, power, forwardNodeName);
 		// TODO Auto-generated constructor stub
 		
 		this.currentLocation = location;
-		this.vehicleType = vType;
-		this.maxRange = maxRange;
-		this.currentRange = maxRange;
-		this.rangeThreshold = rangeThreshold;
-		this.consumptionRate = consumptionRate;
+		this.setVehicleType(vType);
+		this.setFuelConsumptionRate(fuel_consumption_rate);
+		this.setFuelThreshold(fuel_threshold);
+		this.avgSpeed = avg_speed;
+		this.setCurrentFuelLevel(fuel_level);
+		this.fuelAlert = (this.currentFuelLevel <= this.fuelThreshold);
 		holon.setHolonDataModel(createDataModel(name, location,messagingProtocol));
 		holon.createOntology();
 	}
@@ -83,10 +89,13 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 
 		// schedule the first event for parking to register the holon
 		schedule(dataCentre.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_HOLON_REGISTER_HOLON,
-				holon);
-		// schedule the first event for vehicle
-		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents()*20, CloudSimTags.IOV_VEHICLE_FUEL_CONSUMPTION);
-		System.out.println(this.getName() + ": id = " + this.getId());
+				holon);				
+		
+		// establish connection between the vehicle and the UserSmartPhone when the vehicle starts
+		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CONNECT_VEHICLE);
+
+		// schedule the first event for moving the vehicle
+		scheduleVehicleMove();	
 	}
 
 	@Override
@@ -101,11 +110,11 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
 		// Execute sending sensor data 
-		case CloudSimTags.IOV_VEHICLE_FUEL_CONSUMPTION:
-			processFuelConsumption();
+		case CloudSimTags.IOV_VEHICLE_MOVE_EVENT:
+			processMoveVehicle();
 			break;
-		case CloudSimTags.IOV_VEHICLE_FUEL_REFILL:
-			processFuelRefill();
+		case CloudSimTags.IOV_VEHICLE_FUEL_FULL_EVENT:
+			processFuelFull();
 			break;
 		// other unknown tags are processed by this method
 		default:
@@ -114,50 +123,69 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 		}				
 	}
 	
-	private void processFuelConsumption() {
-		currentRange -= this.consumptionRate;
-		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing range to " 
-				+ " to " + currentRange 
-				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
-				);
-
-		//send data to Datacenter, if holon changed then resend holon
-		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents()*100, CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, currentRange);
-
-		// schedule the next event for sending data 
-		scheduleNextFuelConsumptionEvent();
-	}
-	
-	/**
-	 * processFuelRefill event
-	 */
-	private void processFuelRefill() {
-		currentRange = this.maxRange;
-		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing range to " + currentRange 
-				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId()));
-		System.out.println(CloudSim.clock() + ": [" + this.getName() + "] is changing range to " 
-				+ " to " + currentRange);
+	private void processMoveVehicle() {
+		// calculate the distance based on the average speed
+		double distance = (this.avgSpeed / (CloudSim.getMinTimeBetweenEvents()*60*60));
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] moved the distance of " 
+				+ Double.toString(distance)
+			);
 		
-		//send data to Datacenter, if holon changed then resend holon
-		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, currentRange);
+		// update fuel level
+		this.currentFuelLevel = this.currentFuelLevel - (distance/this.fuelConsumptionRate);
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] updated the current fuel level to " 
+				+ Double.toString(currentFuelLevel)
+			);
+
+		// calculate the new location based on the average speed of the vehicle
+		this.currentLocation.setX(this.currentLocation.getX() + avgSpeed); 
+		
+		// moving vehicle in X axis only (for simplicity)
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] updated its location to " 
+				+ Double.toString(this.currentLocation.getX())
+			);
+		
+		// send location update to the UserSmartPhone (the forwardNode)
+		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_VEHICLE_LOCATION_UPDATE_EVENT, this.currentLocation);
+		
+		if (this.currentFuelLevel > 0) {			
+			// check current fuel level 
+			if (this.currentFuelLevel <= this.fuelThreshold) {
+				// set the fuelAlert to true
+				this.fuelAlert = true;
+				Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting the fuel alert to true");
+				
+				// send the fuel alert to the UserSmartPhone (the forwardNode)
+				schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_VEHICLE_FUEL_ALERT_EVENT);
+			}
+			// schedule the next event for moving the vehicle
+			scheduleVehicleMove();	
+		}			
+	}
+
+	private void processFuelFull() {
+		this.currentFuelLevel = this.fuelTankSize;
+		this.fuelAlert = false;
+		
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] updated the current fuel level to the full tank size" );
 	}
 	
-	private void scheduleNextFuelConsumptionEvent(){
-		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents()*100, CloudSimTags.IOV_VEHICLE_FUEL_CONSUMPTION);
+	private void scheduleVehicleMove() {
+		// schedule the next event for the vehicle move after 1 hour 
+		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents()*60*60, CloudSimTags.IOV_VEHICLE_MOVE_EVENT);
 	}
+	
 	
 	private HolonDataModel createDataModel(String name, 
-			Location location, String messagingProtocol) {
+			Location location, MessagingProtocol messagingProtocol) {
 		
 		HolonDataModel dataModel = new HolonDataModel();
         dataModel.putData("name",name);
         dataModel.putData("type", this.vehicleType.toString());
         dataModel.putData("latitude", location.getX()+"");
         dataModel.putData("longitude", location.getY()+"");
-        dataModel.putData("messagingProtocol",messagingProtocol);
+        dataModel.putData("messagingProtocol",messagingProtocol.toString());
         dataModel.putData("connecitonType", this.getConnection().getConnectionType().toString());
         dataModel.putData("powerType", this.getPower().getPowerType().toString());
-        dataModel.putData("range", currentRange+"");
         
         HolonServiceModel service1 = new HolonServiceModel();
         service1.setName("getCurrentRange");
@@ -203,6 +231,20 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 	}
 
 	/**
+	 * @return the fuelTankSize
+	 */
+	public double getFuelTankSize() {
+		return fuelTankSize;
+	}
+
+	/**
+	 * @param tankSize the fuelTankSize to set
+	 */
+	public void setTankSize(double tankSize) {
+		this.fuelTankSize = tankSize;
+	}
+
+	/**
 	 * @return the vehicleType
 	 */
 	public VehicleType getVehicleType() {
@@ -215,44 +257,76 @@ public class VehicleHolon extends IoTNodeHolon  implements IoTNodeMobile {
 	public void setVehicleType(VehicleType vehicleType) {
 		this.vehicleType = vehicleType;
 	}
-	
-	public double getCurrentRange() {
-		return currentRange;
+
+	/**
+	 * @return the fuelConsumptionRate
+	 */
+	public double getFuelConsumptionRate() {
+		return fuelConsumptionRate;
 	}
 
-	public void setCurrentRange(double currentRange) {
-		this.currentRange = currentRange;
+	/**
+	 * @param fuelConsumptionRate the fuelConsumptionRate to set
+	 */
+	public void setFuelConsumptionRate(double fuelConsumptionRate) {
+		this.fuelConsumptionRate = fuelConsumptionRate;
 	}
 
-	public double getConsumptionRate() {
-		return consumptionRate;
+	/**
+	 * @return the fuelThreshold
+	 */
+	public double getFuelThreshold() {
+		return fuelThreshold;
 	}
 
-	public void setConsumptionRate(double consumptionRate) {
-		this.consumptionRate = consumptionRate;
+	/**
+	 * @param fuelThreshold the fuelThreshold to set
+	 */
+	public void setFuelThreshold(double fuelThreshold) {
+		this.fuelThreshold = fuelThreshold;
 	}
 
-	public double getMaxRange() {
-		return maxRange;
+	/**
+	 * @return the avgSpeed
+	 */
+	public double getAvgSpeed() {
+		return avgSpeed;
 	}
 
-	public void setMaxRange(double maxRange) {
-		this.maxRange = maxRange;
+	/**
+	 * @param avgSpeed the avgSpeed to set
+	 */
+	public void setAvgSpeed(double avgSpeed) {
+		this.avgSpeed = avgSpeed;
 	}
 
-	public double getRangeThreshold() {
-		return rangeThreshold;
+	/**
+	 * @return the currentFuelLevel
+	 */
+	public double getCurrentFuelLevel() {
+		return currentFuelLevel;
 	}
 
-	public void setRangeThreshold(double rangeThreshold) {
-		this.rangeThreshold = rangeThreshold;
+	/**
+	 * @param currentFuelLevel the currentFuelLevel to set
+	 */
+	public void setCurrentFuelLevel(double currentFuelLevel) {
+		this.currentFuelLevel = currentFuelLevel;
 	}
 
-	public boolean refuel() {
-		// TODO Auto-generated method stub
-		return true;
+	/**
+	 * @return the fuelAlert
+	 */
+	public boolean isFuelAlert() {
+		return fuelAlert;
 	}
-	
+
+	/**
+	 * @param fuelAlert the fuelAlert to set
+	 */
+	public void setFuelAlert(boolean fuelAlert) {
+		this.fuelAlert = fuelAlert;
+	}
 	
 	
 }

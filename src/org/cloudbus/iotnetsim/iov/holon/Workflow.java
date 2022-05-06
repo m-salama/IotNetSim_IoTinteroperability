@@ -15,12 +15,12 @@ public class Workflow {
 		requiredNodes.add(IoVNodeType.VEHICLE);
 		requiredNodes.add(IoVNodeType.FUEL_STATION);
 		requiredNodes.add(IoVNodeType.RESTAURANT);
+		requiredNodes.add(IoVNodeType.PARKING);
 		//smartPhoneApp.setWorkflow();
 	}
 
 	public void execute() {
-//		double res = (Double) smartPhoneApp.callService(new Object[1], IoVNodeType.VEHICLE,IoVHolonAnnotations.CAR_RANGE);
-//		System.out.println("Workflow: res = " + res);
+		double res = (Double) smartPhoneApp.callService(new Object[1], IoVNodeType.VEHICLE,IoVHolonAnnotations.CAR_RANGE);
 
 	if ((Double) smartPhoneApp.callService(new Object[1], IoVNodeType.VEHICLE,
 				IoVHolonAnnotations.CAR_RANGE) < (Double) smartPhoneApp.callService(new Object[1], IoVNodeType.VEHICLE,
@@ -31,6 +31,7 @@ public class Workflow {
 		}
 		}
 	smartPhoneApp.callService(new Object[1], IoVNodeType.RESTAURANT, IoVHolonAnnotations.BOOK_TABLE);
+	smartPhoneApp.callService(new Object[1], IoVNodeType.PARKING, IoVHolonAnnotations.BOOK_PARKING_SLOT);
 	}
 
 	public ArrayList<IoVNodeType> getRequiredNodes() {

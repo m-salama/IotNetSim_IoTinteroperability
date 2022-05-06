@@ -47,7 +47,7 @@ public class IoTDatacenterHolon extends IoTDatacenter {
 	 */
 	@Override
 	public void processEvent(SimEvent ev) {
-		//super.processEvent(ev);
+		
 		switch (ev.getTag()) {
 		// process receiving data from Gateway Node in the NaturalEnv
 		case CloudSimTags.IOV_HOLON_REGISTER_HOLON:
@@ -59,9 +59,8 @@ public class IoTDatacenterHolon extends IoTDatacenter {
 		case CloudSimTags.IOV_HOLON_REQUEST_HOLON_BY_TYPE:
 			this.processRequestHolonByType(ev);
 			break;
-		case CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT:
-			receiveAndStoreIoVData(ev);
-			break;
+		default: 
+			super.processEvent(ev);
 		}
 	}
 	
@@ -83,32 +82,9 @@ public class IoTDatacenterHolon extends IoTDatacenter {
 		OWLOntology holonOntology = this.getHolonByType((String)ev.getData());
 		schedule(ev.getSource(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_HOLON_RECEIVE_HOLON,
 				holonOntology);
-		
 	}
 
 
-	/**
-	 * receives holon description and stores it in the holon registery
-	 * @param ev
-	 */
-	public void receiveAndStoreIoVData(SimEvent ev) {
-		Double evdata = (Double) ev.getData();
-		int senderId = ev.getSource();
-		IoTNodeHolon sender = (IoTNodeHolon)CloudSim.getEntity(senderId);
-		double t = CloudSim.clock();
-		Log.printLine(
-				CloudSim.clock() + ": [" + getName() + "] is receiving data from " + CloudSim.getEntityName(senderId));
-
-		dataIoV.computeIfAbsent(sender, ignored -> new HashMap<>());
-		
-		// put data entries for each SensorType
-	
-		dataIoV.get(sender).put(t, evdata);
-		
-		// log data
-		 Log.printLine(CloudSim.clock() + ": [" + getName() + "] is storing IoV data:" + evdata 
-				 + " received from " + CloudSim.getEntityName(senderId) +" at time :" + t);
-	}
 	
 	/**
 	 * receives holon description and stores it in the holon registery

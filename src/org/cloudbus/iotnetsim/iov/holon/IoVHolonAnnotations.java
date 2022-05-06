@@ -12,5 +12,6 @@ public class IoVHolonAnnotations {
 	public static final int CAR_RANGE_THRESHOLD = 4;
 	public static final int FUEL_VEHICLE = 5;
 	public static final int MESSAGING_PROTOCOL = 6;
+	public static final int BOOK_PARKING_SLOT = 7;
 	
 }
