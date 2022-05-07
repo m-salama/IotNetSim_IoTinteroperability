@@ -445,32 +445,44 @@ public class CloudSimTags {
 	public static final int IOV_CLOUD_RECEIVE_DATA_EVENT = IOV_BASE + 10;
 	public static final int IOV_CLOUD_PROCESS_REQUEST_EVENT = IOV_BASE + 11;
 	
-	public static final int IOV_CLOUD_REQUEST_MEDIATOR = IOV_BASE + 100;
+	public static final int IOV_NODE_CONNECTION_EVENT = IOV_BASE + 12;
 	
-	public static final int IOV_NODE_CONNECTION_EVENT = IOV_BASE + 21;
+	public static final int IOV_CONNECT_VEHICLE = IOV_BASE + 13;
+	public static final int IOV_FIND_NEAREST_STATION_EVENT = IOV_BASE + 14;
+	public static final int IOV_FIND_NEAREST_PETROLSTATION_EVENT = IOV_BASE + 15;
+	public static final int IOV_FIND_NEAREST_ELECTRICCHARGINGSTATION_EVENT = IOV_BASE + 16;
+	public static final int IOV_RECEIVE_STATION_DATA_EVENT = IOV_BASE + 17;
+	public static final int IOV_RECEIVE_PETROLSTATION_PRICE_EVENT = IOV_BASE + 18;
+	public static final int IOV_RECEIVE_ELECTRICCHARGINGSTATION_AVAILABILITY_EVENT = IOV_BASE + 19;
 	
-	public static final int IOV_CONNECT_VEHICLE = IOV_BASE + 12;
-	public static final int IOV_FIND_NEAREST_STATION_EVENT = IOV_BASE + 13;
-	public static final int IOV_RECEIVE_STATION_DATA_EVENT = IOV_BASE + 14;
-	public static final int IOV_FIND_NEAREST_PARKING_EVENT = IOV_BASE + 15;
-	public static final int IOV_RECEIVE_PARKING_DATA_EVENT = IOV_BASE + 16;
-	public static final int IOV_FIND_NEAREST_RESTAURANT_EVENT = IOV_BASE + 17;
-	public static final int IOV_RECEIVE_RESTAURANT_DATA_EVENT = IOV_BASE + 18;
+	public static final int IOV_FIND_NEAREST_PARKING_EVENT = IOV_BASE + 20;
+	public static final int IOV_RECEIVE_PARKING_DATA_EVENT = IOV_BASE + 21;
+	public static final int IOV_RECEIVE_PARKING_AVAILABILITY_EVENT = IOV_BASE + 22;
+	
+	public static final int IOV_FIND_NEAREST_RESTAURANT_EVENT = IOV_BASE + 23;
+	public static final int IOV_RECEIVE_RESTAURANT_DATA_EVENT = IOV_BASE + 24;
+	
+	public static final int IOV_CHECK_TRAFFICALERT = IOV_BASE + 25;
+	public static final int IOV_RECEIVE_TRAFFICALERT_DATA_EVENT = IOV_BASE + 26;
+	
 	
 	public static final int IOV_VEHICLE_MOVE_EVENT = IOV_BASE + 60;
 	public static final int IOV_VEHICLE_LOCATION_UPDATE_EVENT = IOV_BASE + 61;
-	public static final int IOV_VEHICLE_FUEL_ALERT_EVENT = IOV_BASE + 62;
+	public static final int IOV_VEHICLE_FUEL_ALERT_EVENT = IOV_BASE + 62; 
 	public static final int IOV_VEHICLE_FUEL_FULL_EVENT = IOV_BASE + 63;
 
-	public static final int IOV_PARKING_CHANGE_AVAILABILITY_EVENT = IOV_BASE + 20;
+	public static final int IOV_ELECTRICCHARGINGSTATION_CHANGE_AVAILABILITY_EVENT = IOV_BASE + 40;
+	public static final int IOV_ELECTRICCHARGINGSTATION_CHECK_AVAILABILITY_EVENT = IOV_BASE + 41;
 	
-	public static final int IOV_STATION_CHANGE_AVAILABILITY_EVENT = IOV_BASE + 40;
-	public static final int IOV_STATION_CHANGE_PRICE_EVENT = IOV_BASE + 41;
-	public static final int IOV_STATION_CHECK_PRICE_EVENT = IOV_BASE + 42;
-	public static final int IOV_RECEIVE_STATION_PRICE_EVENT = IOV_BASE + 43;
+	public static final int IOV_PETROLSTATION_CHANGE_PRICE_EVENT = IOV_BASE + 42;
+	public static final int IOV_PETROLSTATION_CHECK_PRICE_EVENT = IOV_BASE + 43;
 	
 	public static final int IOV_TRAFFIC_ALERT_ON_EVENT = IOV_BASE + 50;
 	public static final int IOV_TRAFFIC_ALERT_OFF_EVENT = IOV_BASE + 51;
+	public static final int IOV_TRAFFIC_CHECK_ALERT_EVENT = IOV_BASE + 52;
+	
+	public static final int IOV_PARKING_CHANGE_AVAILABILITY_EVENT = IOV_BASE + 55;
+	public static final int IOV_PARKING_CHECK_AVAILABILITY_EVENT= IOV_BASE + 56;
 	
 	public static final int IOV_RESTAURANT_OPEN_EVENT = IOV_BASE + 30;
 	public static final int IOV_RESTAURANT_CLOSE_EVENT = IOV_BASE + 31;
@@ -479,6 +491,8 @@ public class CloudSimTags {
 	public static final int IOV_RESTAURANT_ORDER_CONFIRMATION_EVENT = IOV_BASE + 34;
 	public static final int IOV_RESTAURANT_ORDER_READY_EVENT = IOV_BASE + 35;
 	public static final int IOV_RESTAURANT_BOOKING_CONFIRMATION_EVENT = IOV_BASE + 36;
+	
+	public static final int IOV_CLOUD_REQUEST_MEDIATOR = IOV_BASE + 100;
 	
 	
 

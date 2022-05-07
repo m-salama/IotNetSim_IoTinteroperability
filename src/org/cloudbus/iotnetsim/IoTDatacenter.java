@@ -1,9 +1,15 @@
 package org.cloudbus.iotnetsim;
 
-import java.util.ArrayList;
+import java.awt.Point;
+import java.awt.geom.Point2D;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -15,7 +21,10 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
-import org.cloudbus.iotnetsim.iov.IoVNodeType;
+import org.cloudbus.iotnetsim.iov.TrafficControlUnit;
+import org.cloudbus.iotnetsim.iov.UserSmartPhone;
+import org.cloudbus.iotnetsim.iov.Vehicle;
+import org.cloudbus.iotnetsim.iov.VehicleType;
 import org.cloudbus.iotnetsim.naturalenv.SensorType;
 
 /**
@@ -118,16 +127,33 @@ public class IoTDatacenter extends Datacenter {
 		case CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT:
 			receiveAndStoreIoVData(ev);
 			break;
-		// process 
+			// process user request to find nearest petrol station
+		case CloudSimTags.IOV_FIND_NEAREST_PETROLSTATION_EVENT:
+			processFindNearestStation(ev);
+			break;
+			// process user request to find nearest electric charging station
+		case CloudSimTags.IOV_FIND_NEAREST_ELECTRICCHARGINGSTATION_EVENT:
+			processFindNearestStation(ev);
+			break;
+		// process user request to find nearest fuel station
 		case CloudSimTags.IOV_FIND_NEAREST_STATION_EVENT:
 			processFindNearestStation(ev);
 			break;
+			// process user request to find nearest parking
 		case CloudSimTags.IOV_FIND_NEAREST_PARKING_EVENT:
 			processFindNearestParking(ev);
 			break;
+			// process user request to find nearest restaurant
 		case CloudSimTags.IOV_FIND_NEAREST_RESTAURANT_EVENT:
 			processFindNearestRestaurant(ev);
 			break;
+		case CloudSimTags.IOV_CHECK_TRAFFICALERT:
+			processCheckTrafficAlert(ev);
+			break;
+			
+		//mediator related tags
+		case CloudSimTags.IOV_CLOUD_REQUEST_MEDIATOR:
+			processRequestMediator(ev);
 		}
 	}
 	
@@ -189,7 +215,7 @@ public class IoTDatacenter extends Datacenter {
 		int senderId = ev.getSource();
 		boolean availability = (boolean) ev.getData();
 		
-		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is receiving data from " + CloudSim.getEntityName(senderId));
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] received data from " + CloudSim.getEntityName(senderId));
 		
 		// add the received data to the IoV data store
 		iovData.put((IoTNode) CloudSim.getEntity(senderId), availability);
@@ -204,22 +230,23 @@ public class IoTDatacenter extends Datacenter {
 	private void processFindNearestStation(SimEvent ev) {
 		Location userLocation = (Location) ev.getData();
 		int userID = ev.getSource();
+		UserSmartPhone user = (UserSmartPhone) CloudSim.getEntity(userID);
+		Vehicle vehicle = (Vehicle) CloudSim.getEntity(user.getConnectedVehicleID());
 		
 		int stationID = -1;
 		
-		for (Map.Entry<IoTNode, Boolean> e : iovData.entrySet()) {
-			if(e.getKey().getNodeType() == IoTNodeType.STATION) {
-				if (e.getKey().getLocation().getX() == userLocation.getX()+10 || 
-						e.getKey().getLocation().getX() == userLocation.getX()-10 ||
-						e.getKey().getLocation().getY() == userLocation.getY()+10 ||
-						e.getKey().getLocation().getY() == userLocation.getY()-10) {
-					stationID = e.getKey().getId();
-				}
-			}
-		}
+		if (vehicle.getVehicleType() == VehicleType.PETROL_VEHICLE) {
+			stationID = searchNearestNode(IoTNodeType.PETROL_STATION, userLocation);
+		} else if(vehicle.getVehicleType() == VehicleType.ELECTRIC_VEHICLE) {
+			stationID = searchNearestNode(IoTNodeType.ELECTRIC_CHARGING_STATION, userLocation);
+		}		
 		
-		// send the nearest station data to the UserSmartPhone
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_STATION_DATA_EVENT, stationID);		
+		if (stationID != -1) {
+			// send the nearest station data to the UserSmartPhone
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_STATION_DATA_EVENT, stationID);	
+		} else {
+			Log.printLine(CloudSim.clock() + ": [" + getName() + "] couldn't find a station");
+		}
 	}
 	
 	/**
@@ -232,19 +259,14 @@ public class IoTDatacenter extends Datacenter {
 		
 		int parkingID = -1;
 		
-		for (Map.Entry<IoTNode, Boolean> e : iovData.entrySet()) {
-			if(e.getKey().getNodeType() == IoTNodeType.PARKING) {
-				if (e.getKey().getLocation().getX() == userLocation.getX()+10 || 
-						e.getKey().getLocation().getX() == userLocation.getX()-10 ||
-						e.getKey().getLocation().getY() == userLocation.getY()+10 ||
-						e.getKey().getLocation().getY() == userLocation.getY()-10) {
-					parkingID = e.getKey().getId();
-				}
-			}
-		}
+		parkingID = searchNearestNode(IoTNodeType.PARKING, userLocation);
 		
-		// send the nearest station data to the UserSmartPhone
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_PARKING_DATA_EVENT, parkingID);		
+		if (parkingID != -1) {
+			// send the nearest station data to the UserSmartPhone
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_PARKING_DATA_EVENT, parkingID);
+		} else {
+			Log.printLine(CloudSim.clock() + ": [" + getName() + "] couldn't find a parking");
+		}
 	}
 	
 	/**
@@ -257,22 +279,94 @@ public class IoTDatacenter extends Datacenter {
 		
 		int restaurantID = -1;
 		
+		restaurantID = searchNearestNode(IoTNodeType.RESTAURANT, userLocation);
+		
+		if (restaurantID != -1) {
+			// send the nearest station data to the UserSmartPhone
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_RESTAURANT_DATA_EVENT, restaurantID);
+		} else {
+			Log.printLine(CloudSim.clock() + ": [" + getName() + "] couldn't find a restaurant");
+		}
+	}
+	
+	public class NearestComparator implements Comparator<Entry> {
+
+        @Override
+        public int compare(Entry e1, Entry e2) {
+            return Double.compare((Double) e1.getValue(), (Double) e2.getValue());
+        }
+    }
+	
+	@SuppressWarnings("unlikely-arg-type")
+	private int searchNearestNode(IoTNodeType nodeType, Location userLocation) {
+		int nearestNodeID = -1;
+		//userLocation as 2D point 
+		Point2D userLocationPoint = new Point.Double(userLocation.getX(), userLocation.getY());
+		
+		// temp data structure to store the nodes of the same type requested
+		Map<Point2D, IoTNode> nodesList = new HashMap<Point2D, IoTNode>();
+		// get the list of nodes of the same type requested
 		for (Map.Entry<IoTNode, Boolean> e : iovData.entrySet()) {
-			if(e.getKey().getClass().getName() == "Restaurant") {
-				if (e.getKey().getLocation().getX() == userLocation.getX()+10 || 
-						e.getKey().getLocation().getX() == userLocation.getX()-10 ||
-						e.getKey().getLocation().getY() == userLocation.getY()+10 ||
-						e.getKey().getLocation().getY() == userLocation.getY()-10) {
-					restaurantID = e.getKey().getId();
-				}
+			if(e.getKey().getNodeType().equals(nodeType)) {
+				nodesList.put(new Point.Double(e.getKey().getLocation().getX(), e.getKey().getLocation().getY()), e.getKey());
 			}
 		}
 		
-		// send the nearest station data to the UserSmartPhone
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_RESTAURANT_DATA_EVENT, restaurantID);		
+		// temp data structure to store the distance between each node and userLocation
+		@SuppressWarnings("rawtypes")
+		LinkedList<Entry> nodesListSorted = new LinkedList<>();
+		// calculate distance between userLocation and each node
+		if (nodesList.size() > 0) {
+			for (Point2D point : nodesList.keySet()) {			
+				Entry<IoTNode, Double> e = new SimpleEntry<>(nodesList.get(point), point.distance(userLocationPoint));
+				nodesListSorted.add(e);
+			}			
+			// sort list by distance from destination
+	        Collections.sort(nodesListSorted, new NearestComparator());
+
+	        IoTNode nearestNode = (IoTNode) nodesListSorted.get(0).getKey();
+	        nearestNodeID = nearestNode.getId();
+		}
+
+		return nearestNodeID; 
 	}
 	
+	/**
+	 * processCheckTrafficAlert for IoV
+	 * 
+	 */
+	private void processCheckTrafficAlert(SimEvent ev) {
+		Location userLocation = (Location) ev.getData();
+		int userID = ev.getSource();
+		
+		int trafficControlUnitID = -1;
+		boolean isTrafficAlert;
+		
+		trafficControlUnitID = searchNearestNode(IoTNodeType.TRAFFIC_CONTROL_UNIT, userLocation);
+		
+		if (trafficControlUnitID != -1) {
+			TrafficControlUnit trafficControlUnit = (TrafficControlUnit) CloudSim.getEntity(trafficControlUnitID);
+			isTrafficAlert = trafficControlUnit.isTrafficAlert();
+			
+			// send the traffic alert info to the UserSmartPhone
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_TRAFFICALERT_DATA_EVENT, isTrafficAlert);
+		} else {
+			Log.printLine(CloudSim.clock() + ": [" + getName() + "] couldn't check traffic alert");
+		}
+	}
+	
+	/**
+	 * processRequestMediator 
+	 * 
+	 */
+	private void processRequestMediator(SimEvent ev) {
+		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is processing the request of mediator for user "
+				+ CloudSim.getEntityName(ev.getSource())
+				);
+		
+	}
 
+	
 	public Map<SensorType, Map<Double, Double>> getReadingsData() {
 		return readingsData;
 	}

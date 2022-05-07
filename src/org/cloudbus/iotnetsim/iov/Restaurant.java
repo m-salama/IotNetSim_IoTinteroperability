@@ -58,6 +58,7 @@ public class Restaurant extends IoTNode {
 		this.openingTime = opening_time;
 		this.closingTime = closing_time;
 		this.isOpen = true;
+		
 		this.currentExpDay = 1;
 	}
 
@@ -117,6 +118,7 @@ public class Restaurant extends IoTNode {
 		this.isOpen = true;
 
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is open"
+				+ " at day " + currentExpDay
 				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
 				);
 
@@ -134,6 +136,7 @@ public class Restaurant extends IoTNode {
 		this.isOpen = false;
 		
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is closed"
+				+ " at day " + currentExpDay
 				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
 				);
 

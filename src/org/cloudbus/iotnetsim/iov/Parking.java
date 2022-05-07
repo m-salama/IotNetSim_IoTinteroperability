@@ -97,6 +97,9 @@ public class Parking extends IoTNode {
 		case CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY_EVENT:
 			processChangeParkingAvailability();
 			break;
+		case CloudSimTags.IOV_PARKING_CHECK_AVAILABILITY_EVENT:
+			processCheckAvailability(ev.getSource());
+			break;
 
 		// other unknown tags are processed by this method
 		default:
@@ -125,13 +128,13 @@ public class Parking extends IoTNode {
 
 		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			// schedule the next event for sending data 
-			scheduleNextChange();
+			schedule(this.getId(), this.getParkingChangeInterval(), CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY_EVENT);
 		}
 	}
 
 	private int getNewAvailabilityRandom() {
 		Random random = new Random();  		
-		int newAvailability = random.nextInt(this.totalParkingSlots);  
+		int newAvailability = Math.abs(random.nextInt(this.totalParkingSlots));  
 		
 		if (currentChangeIndex < (24/(this.parkingChangeInterval/60/60))-1) {		//to get all the changes for this day
 			currentChangeIndex +=1;
@@ -142,9 +145,15 @@ public class Parking extends IoTNode {
 		return newAvailability;
 	}
 
-	private void scheduleNextChange(){
-		schedule(this.getId(), this.getParkingChangeInterval(), CloudSimTags.IOV_PARKING_CHANGE_AVAILABILITY_EVENT);
+	/**
+	 * processCheckAvailability()
+	 */
+	private void processCheckAvailability(int userID) {
+		// send the price to the user
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_PARKING_AVAILABILITY_EVENT, 
+				this.isAvailable);	
 	}
+	
 
 	/**
 	 * @return the totalParkingSlots

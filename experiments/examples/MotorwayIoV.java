@@ -27,8 +27,10 @@ import org.cloudbus.iotnetsim.IoTNodePowerType;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
+import org.cloudbus.iotnetsim.iov.ElectricChargingStation;
 import org.cloudbus.iotnetsim.iov.Parking;
-import org.cloudbus.iotnetsim.iov.Station;
+import org.cloudbus.iotnetsim.iov.PetrolStation;
+import org.cloudbus.iotnetsim.iov.Restaurant;
 import org.cloudbus.iotnetsim.iov.TrafficControlUnit;
 import org.cloudbus.iotnetsim.iov.UserSmartPhone;
 import org.cloudbus.iotnetsim.iov.Vehicle;
@@ -167,7 +169,33 @@ public class MotorwayIoV {
 		
 		//create user smart phone
 		UserSmartPhone userSmartPhone_0 = new UserSmartPhone(
-				"UserSmartPhone_0",
+				"UserSmartPhone_P0",
+				new Location(0, 0, 0),
+				IoTNodeType.USER_SMART_PHONE,
+				new NetConnection("4G", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.BATTERY, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP
+				);		
+		//create petrol vehicle
+		Vehicle petrolVehicle_P0 = new Vehicle(
+				"PetrolVehicle_0",
+				new Location(0, 0, 0),
+				IoTNodeType.VEHICLE,
+				new NetConnection("4G", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.FUEL, true, false, true, 100.00, 0.00, 0.00),
+				userSmartPhone_0.getName(), 
+				MessagingProtocol.HTTP,
+				VehicleType.PETROL_VEHICLE,
+				45.0,	//tank size 
+				30.0,	//consumption rate 
+				50.0,	//average speed 
+				11.25	//current fuel level
+				);
+		
+		//create user smart phone
+		UserSmartPhone userSmartPhone_1 = new UserSmartPhone(
+				"UserSmartPhone_E0",
 				new Location(0, 0, 0),
 				IoTNodeType.USER_SMART_PHONE,
 				new NetConnection("4G", new NetConnectionType(), 100.00), 
@@ -175,54 +203,84 @@ public class MotorwayIoV {
 				datacenter.getName(), 
 				MessagingProtocol.HTTP
 				);
-		
-		//create vehicle
-		Vehicle vehicle_0 = new Vehicle(
-				"Vehicle_0",
+		//create electric vehicle
+		Vehicle electricVehicle_0 = new Vehicle(
+				"ElectricVehicle_E0",
 				new Location(0, 0, 0),
 				IoTNodeType.VEHICLE,
 				new NetConnection("4G", new NetConnectionType(), 100.00), 
-				new IoTNodePower(IoTNodePowerType.FUEL, true, false, true, 100.00, 0.00, 0.00),
-				datacenter.getName(), 
+				new IoTNodePower(IoTNodePowerType.BATTERY, true, false, true, 100.00, 0.00, 0.00),
+				userSmartPhone_1.getName(), 
 				MessagingProtocol.HTTP,
-				VehicleType.FUEL_VEHICLE,
-				45.0, 25.0, 10.0, 60.0, 45.0
+				VehicleType.ELECTRIC_VEHICLE,
+				35.0,	//battery size 
+				2.45,	//consumption rate 
+				50.0,	//average speed 
+				7.0	//current battery level
 				);
-		
-		//create electric vehicle
 
-		//create Fuel Station
-		Station station_0 = new Station(
-				"Station_0",
-				new Location(10, 10, 10),
-				IoTNodeType.STATION,
+		//create Petrol Station
+		PetrolStation petrolStation_0 = new PetrolStation(
+				"PetrolStation_0",
+				new Location(10, 10, 0),
+				IoTNodeType.PETROL_STATION,
 				new NetConnection("wifi", new NetConnectionType(), 100.00), 
 				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
 				datacenter.getName(), 
 				MessagingProtocol.HTTP,
-				VehicleType.FUEL_VEHICLE,
-				10.0
+				0.153		//153p per litre
 				);
 		
 		//create Electric Charging Station
+		ElectricChargingStation electricChargingStation_0 = new ElectricChargingStation(
+				"ElectricChargingStation_0",
+				new Location(10, 10, 0),
+				IoTNodeType.ELECTRIC_CHARGING_STATION,
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP,
+				0.28		//28p per kWh
+				);
 		
 		//create Parking
-//		Parking parking_0 = new Parking(
-//				"Parking_0",
-//				new Location(200*100, 200*100, 0), 
-//				IoTNodeType.PARKING,
-//				new NetConnection("wifi", new NetConnectionType(), 100.00), 
-//				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
-//				datacenter.getName(), 
-//				MessagingProtocol.HTTP,
-//				100,
-//				readingInterval+CloudSim.getMinTimeBetweenEvents()*3
-//				);
+		Parking parking_0 = new Parking(
+				"Parking_0",
+				new Location(200*100, 200*100, 0), 
+				IoTNodeType.PARKING,
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP,
+				100,
+				ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0]+CloudSim.getMinTimeBetweenEvents()*3
+				);
 
 		//create Restaurant 
+		Restaurant restaurant_0 = new Restaurant(
+				"Restaurant_0", 
+				new Location(10, 15, 0), 
+				IoTNodeType.RESTAURANT, 
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP,
+				7*60*60,	//opening time 7h
+				21*60*60	//closing time 21h
+				);
 		
 		//create Traffic Control Unit
-
+		TrafficControlUnit trafficControlUnit_0 = new TrafficControlUnit(
+				"TrafficControlUnit_0", 
+				new Location(100, 100, 0), 
+				IoTNodeType.TRAFFIC_CONTROL_UNIT, 
+				new NetConnection("wifi", new NetConnectionType(), 100.00), 
+				new IoTNodePower(IoTNodePowerType.CONTINUOUS_POWER, true, false, true, 100.00, 0.00, 0.00),
+				datacenter.getName(), 
+				MessagingProtocol.HTTP,
+				ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0]+CloudSim.getMinTimeBetweenEvents(), 
+				ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0]+CloudSim.getMinTimeBetweenEvents()
+				);
 	}
 
 }

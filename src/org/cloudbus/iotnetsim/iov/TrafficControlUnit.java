@@ -55,6 +55,9 @@ public class TrafficControlUnit extends IoTNode {
 		
 		this.trafficAlertInterval = traffic_alert_interval;
 		this.isTrafficAlert = false;
+
+		this.currentExpDay = 1;
+		this.currentChangeIndex = 0;
 	}
 
 	@Override
@@ -87,6 +90,9 @@ public class TrafficControlUnit extends IoTNode {
 			break;
 		case CloudSimTags.IOV_TRAFFIC_ALERT_OFF_EVENT:
 			processCancelTrafficAlert();
+			break;
+		case CloudSimTags.IOV_TRAFFIC_CHECK_ALERT_EVENT:
+			processCheckAlert(ev.getSource());
 			break;
 
 		// other unknown tags are processed by this method
@@ -139,12 +145,20 @@ public class TrafficControlUnit extends IoTNode {
 		}		
 	}
 	
+	/**
+	 * processCheckAvailability()
+	 */
+	private void processCheckAlert(int userID) {
+		// send the price to the user
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_TRAFFICALERT_DATA_EVENT, 
+				this.isTrafficAlert);	
+	}
+
 	private void scheduleCancelTrafficAlertEventRandom() {
 		// schedule the event for setting this traffic alert off
 		Random random = new Random();  		
 		double cancelTime = random.nextDouble() * ((this.trafficAlertInterval - CloudSim.getMinTimeBetweenEvents()) + CloudSim.getMinTimeBetweenEvents());  
 		schedule(this.getId(), cancelTime, CloudSimTags.IOV_TRAFFIC_ALERT_OFF_EVENT);
-
 	}
 
 	private void scheduleSendDataEvent() {

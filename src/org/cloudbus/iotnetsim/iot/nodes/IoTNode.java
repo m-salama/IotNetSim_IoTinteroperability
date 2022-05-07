@@ -123,7 +123,7 @@ public abstract class IoTNode extends SimEntity {
 			return;
 		}
 
-		Log.printLine(getName() + ".processOtherEvent(): " + "Error - event unknown by this Sensor.");
+		Log.printLine(getName() + ".processOtherEvent(): " + "Error - event unknown by this IoTNode.");
 	}
 
 	public Location getLocation() {
