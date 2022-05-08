@@ -28,7 +28,7 @@ import org.cloudbus.iotnetsim.network.NetConnection;
  */
 
 /**
- * Class
+ * Class IoTNode
  * 
  * @author Maria Salama
  * 

@@ -27,6 +27,9 @@ import org.cloudbus.iotnetsim.iov.Vehicle;
 import org.cloudbus.iotnetsim.iov.VehicleType;
 import org.cloudbus.iotnetsim.naturalenv.SensorType;
 
+import dionasys.mediation.Mediator;
+import dionasys.mediation.RequestType;
+
 /**
  * Title:        IoTNetSim Toolkit
  * Description:  Modelling and Simulation for End-to-End IoT Services & Networking 
@@ -58,7 +61,10 @@ public class IoTDatacenter extends Datacenter {
 	protected Map<SensorType, Map<Double, Double>> readingsData; 	
 	
 	//IoV data: data structure for storing data, k: IoTNodeI, v: availability 
-	protected Map<IoTNode, Boolean> iovData; 			
+	protected Map<IoTNode, Boolean> iovData; 	
+	
+	// mediator instance to be used instantiated if needed
+	private Mediator mediator;
 	
 	
 	/**
@@ -360,10 +366,26 @@ public class IoTDatacenter extends Datacenter {
 	 * 
 	 */
 	private void processRequestMediator(SimEvent ev) {
+		int senderId = ev.getSource();
+		Object[] data = (Object[]) ev.getData();
+		int receiverId = (int) data[0];
+		RequestType rType = (RequestType) data[1];
+				
 		Log.printLine(CloudSim.clock() + ": [" + getName() + "] is processing the request of mediator for user "
-				+ CloudSim.getEntityName(ev.getSource())
+				+ CloudSim.getEntityName(senderId)
 				);
 		
+		Object response = null;
+		//instantiate mediator, if needed
+		if (mediator == null) {
+			this.mediator = new Mediator("mediator_0");
+		}
+		if (!mediator.isAssigned()) {
+			response = mediator.processRequest(senderId, receiverId, rType);
+		}
+		if (response != null) {
+			schedule(senderId, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_SEND_MEDIATOR_RESPONSE_EVENT, response);
+		}
 	}
 
 	

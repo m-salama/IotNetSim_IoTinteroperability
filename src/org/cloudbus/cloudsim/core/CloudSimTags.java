@@ -465,7 +465,6 @@ public class CloudSimTags {
 	public static final int IOV_CHECK_TRAFFICALERT = IOV_BASE + 25;
 	public static final int IOV_RECEIVE_TRAFFICALERT_DATA_EVENT = IOV_BASE + 26;
 	
-	
 	public static final int IOV_VEHICLE_MOVE_EVENT = IOV_BASE + 60;
 	public static final int IOV_VEHICLE_LOCATION_UPDATE_EVENT = IOV_BASE + 61;
 	public static final int IOV_VEHICLE_FUEL_ALERT_EVENT = IOV_BASE + 62; 
@@ -493,10 +492,7 @@ public class CloudSimTags {
 	public static final int IOV_RESTAURANT_BOOKING_CONFIRMATION_EVENT = IOV_BASE + 36;
 	
 	public static final int IOV_CLOUD_REQUEST_MEDIATOR = IOV_BASE + 100;
-	
-	
-
-
+	public static final int IOV_CLOUD_SEND_MEDIATOR_RESPONSE_EVENT = IOV_BASE + 101;
 	
 	/** 
 	 * Starting IoTNetSim for IoV-Holon related tags 

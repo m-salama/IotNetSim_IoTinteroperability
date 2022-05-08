@@ -39,6 +39,7 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 import org.cloudbus.iotnetsim.network.NetConnectionType;
 
 import configurations.ExperimentsConfigurations;
+import dionasys.mediation.Mediator;
 import helper.Setup;
 import helper.Workload;
 
@@ -281,6 +282,9 @@ public class MotorwayIoV {
 				ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0]+CloudSim.getMinTimeBetweenEvents(), 
 				ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0]+CloudSim.getMinTimeBetweenEvents()
 				);
+		
+//		Mediator m = new Mediator("mediator_0", userSmartPhone_1.getId(), restaurant_0.getId(), new Object(), new Object());
+//		m.processRequest();
 	}
 
 }

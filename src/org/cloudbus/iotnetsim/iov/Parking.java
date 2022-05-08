@@ -184,6 +184,20 @@ public class Parking extends IoTNode {
 	}
 
 	/**
+	 * @return the isAvailable
+	 */
+	public boolean isAvailable() {
+		return isAvailable;
+	}
+
+	/**
+	 * @param isAvailable the isAvailable to set
+	 */
+	public void setAvailable(boolean isAvailable) {
+		this.isAvailable = isAvailable;
+	}
+
+	/**
 	 * @return the parkingChangeInterval
 	 */
 	public double getParkingChangeInterval() {
