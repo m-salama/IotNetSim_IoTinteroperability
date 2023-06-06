@@ -1,4 +1,4 @@
-package configurations;
+package experiments.configurations;
 
 /**
  * Title:        SAd/SAw CloudSim Toolkit
@@ -37,7 +37,7 @@ package configurations;
 public class ExperimentsConfigurations {
 	
 	//for setting the number of days to run the experiment
-	public static int EXP_NO_OF_DAYS = 3;
+	public static int EXP_NO_OF_DAYS = 30;
 
 	//variable readingInterval is used to represent the different reading intervals
 	public static double READING_INTERVAL[] = {24*60*60, 12*60*60, 6*60*60, 3*60*60};			//every no_of_hours*60min*60sec = every x seconds
@@ -48,4 +48,25 @@ public class ExperimentsConfigurations {
 	//public final static int WORKLOAD_INTERVAL = 24*60*60;   		//every one day in seconds
 	public final static int WORKLOAD_INTERVAL[] = {24*60*60, 12*60*60, 6*60*60, 3*60*60};			//every no_of_hours*60min*60sec = every x seconds
 
+	// variables of IoV experiments
+	// variable to set the length of the trips
+	//public final static String IOV_EXP_TRIP_TYPE = "RandomLength";
+	public final static String IOV_EXP_TRIP_TYPE = "FixedLength";
+	public final static double IOV_EXP_TRIP_LENGTH = 10;
+	
+	// variable to set the frequency of the trips
+	//public final static String IOV_EXP_TRIP_FREQUENCY = "Random";
+	public final static String IOV_EXP_TRIP_FREQUENCY = "Continuous";
+	public final static int IOV_EXP_TRIP_INTERVAL = 3*60*60;
+	
+	// variable to set when the different service entities will change their availability
+	//public final static String IOV_EXP_ServiceEntities_CHANGE = "Random";
+	public final static String IOV_EXP_ServiceEntities_CHANGE = "Frequent";
+	public final static int IOV_EXP_ServiceEntities_INTERVAL = 12*60*60;
+	
+	// variable to set the frequency of the service requests
+	//public final static String IOV_EXP_ServiceRequests = "Random";
+	public final static String IOV_EXP_ServiceRequests = "Continuous";
+	public final static int IOV_EXP_ServiceRequests_INTERVAL = 3*60*60;
+	
 }
