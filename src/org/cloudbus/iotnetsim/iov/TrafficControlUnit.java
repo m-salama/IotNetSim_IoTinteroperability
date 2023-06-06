@@ -11,7 +11,10 @@ import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.LinkNode;
+import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
+
+import experiments.configurations.ExperimentsConfigurations;
 
 /** 
  * Class TrafficControlUnit
@@ -21,12 +24,9 @@ import org.cloudbus.iotnetsim.network.NetConnection;
  */
 
 public class TrafficControlUnit extends IoTNode {
-
-	//boolean variable to be set if the traffic alert in on/off (true/false)
-	private boolean isTrafficAlert;
 	
-	// interval for sending traffic alerts every x seconds
-	private double trafficAlertInterval;			
+	private boolean isTrafficAlert;		//boolean variable to be set if the traffic alert in on/off (true/false)
+	private double alertChangeInterval;		// interval for changing traffic alerts every x seconds		
 
 	protected int currentExpDay;
 	protected int currentChangeIndex;
@@ -39,21 +39,23 @@ public class TrafficControlUnit extends IoTNode {
 
 	public TrafficControlUnit(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName) {
+			String forwardNodeName, MessagingProtocol msgProtocol) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 	}
 
 	public TrafficControlUnit(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
-			String forwardNodeName, double forward_interval,
-			double traffic_alert_interval) {
+			String forwardNodeName, MessagingProtocol msgProtocol, double alert_change_interval) {
 		
-		super(name, location, nodeType, connection, power, forwardNodeName);
+		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		
-		this.trafficAlertInterval = traffic_alert_interval;
+		this.alertChangeInterval = alert_change_interval;
 		this.isTrafficAlert = false;
+
+		this.currentExpDay = 1;
+		this.currentChangeIndex = 0;
 	}
 
 	@Override
@@ -61,8 +63,14 @@ public class TrafficControlUnit extends IoTNode {
 		// TODO Auto-generated method stub
 		Log.printLine(getName() + " is starting...");				
 		
+		// connect to the datacenter
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is connecting to the Datacenter " 
+				+ CloudSim.getEntityName(getForwardNodeId())
+				);
+		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_NODE_CONNECTION_EVENT, isTrafficAlert);
+
 		// schedule the first event for sending traffic alert
-		scheduleSendTrafficAlert();	
+		scheduleNextAlertChangeEvent();
 	}
 
 	@Override
@@ -75,11 +83,11 @@ public class TrafficControlUnit extends IoTNode {
 	public void processEvent(SimEvent ev) {
 		// TODO Auto-generated method stub
 		switch (ev.getTag()) {
-		case CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT:
-			sendTrafficAlert();
+		case CloudSimTags.IOV_TRAFFIC_ALERT_CHANGE_EVENT:
+			processChangeTrafficAlert();
 			break;
-		case CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT:
-			cancelTrafficAlert();
+		case CloudSimTags.IOV_TRAFFIC_CHECK_ALERT_EVENT:
+			processCheckAlert(ev.getSource());
 			break;
 
 		// other unknown tags are processed by this method
@@ -93,58 +101,45 @@ public class TrafficControlUnit extends IoTNode {
 	 * sendTrafficAlert()
 	 * method for setting the traffic alert on
 	 */	
-	public void sendTrafficAlert() {
-		this.isTrafficAlert = true;
-		
-		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting traffic alert" 
-			+ " in Day " + currentExpDay
-			+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
-			);
+	public void processChangeTrafficAlert() {
+		this.isTrafficAlert = !(this.isTrafficAlert);
+
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting traffic alert "
+				+ " to " + this.isTrafficAlert 
+				+ " in Day " + currentExpDay
+				+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
+				);
 
 		// send data to Datacenter
-		scheduleNextSendDataEvent();
+		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isTrafficAlert);
 
-		// schedule the event for cancelling this traffic alert at random time
-		scheduleCancelTrafficAlertEventRandom();		
-	}
-	
-	/**
-	 * cancelTrafficAlert()
-	 * method for setting the traffic alert off at random time
-	 */	
-	public void cancelTrafficAlert() {
-		this.isTrafficAlert = false;
-
-		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is cancelling traffic alert" 
-			+ " in Day " + currentExpDay
-			+ " and sending data to " + CloudSim.getEntityName(getForwardNodeId())
-			);
-
-		// send data to Datacenter
-		scheduleNextSendDataEvent();
-		
 		if (CloudSim.clock() >= currentExpDay*24*60*60) {
 			currentExpDay +=1;
 		}
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
-			// schedule the next event for sending traffic alert
-			scheduleSendTrafficAlert();
-		}		
-	}
-	
-	private void scheduleSendTrafficAlert() {
-		schedule(this.getId(), this.trafficAlertInterval, CloudSimTags.IOV_TRAFFIC_ALERT_SEND_EVENT);
-	}
-	
-	private void scheduleCancelTrafficAlertEventRandom() {
-		// schedule the event for setting this traffic alert off
-		Random random = new Random();  		
-		double cancelTime = random.nextDouble() * ((this.trafficAlertInterval - CloudSim.getMinTimeBetweenEvents()) + CloudSim.getMinTimeBetweenEvents());  
-		schedule(this.getId(), cancelTime, CloudSimTags.IOV_TRAFFIC_ALERT_CANCEL_EVENT);
 
+		// schedule the next event for changing traffic alert
+		scheduleNextAlertChangeEvent();
 	}
-	private void scheduleNextSendDataEvent() {
-		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isTrafficAlert);		
+	
+	private void scheduleNextAlertChangeEvent() {
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {			
+			if (ExperimentsConfigurations.IOV_EXP_ServiceEntities_CHANGE == "Frequent") {
+				schedule(this.getId(), this.alertChangeInterval, CloudSimTags.IOV_TRAFFIC_ALERT_CHANGE_EVENT);
+			} else if (ExperimentsConfigurations.IOV_EXP_ServiceEntities_CHANGE == "Random") {
+				Random random = new Random();  		
+				double changeTime = random.nextDouble() * ((this.alertChangeInterval - CloudSim.getMinTimeBetweenEvents()) + CloudSim.getMinTimeBetweenEvents());  
+				schedule(this.getId(), changeTime, CloudSimTags.IOV_TRAFFIC_ALERT_CHANGE_EVENT);
+			}
+		}
+	}
+	
+	/**
+	 * processCheckAlert()
+	 */
+	private void processCheckAlert(int userID) {
+		// send the traffic alert data to the user
+		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_TRAFFICALERT_DATA_EVENT, 
+				this.isTrafficAlert);	
 	}
 
 	/**
@@ -164,15 +159,15 @@ public class TrafficControlUnit extends IoTNode {
 	/**
 	 * @return the trafficAlertInterval
 	 */
-	public double getTrafficAlertInterval() {
-		return trafficAlertInterval;
+	public double getAlertChangeInterval() {
+		return alertChangeInterval;
 	}
 
 	/**
 	 * @param trafficAlertInterval the trafficAlertInterval to set
 	 */
-	public void setTrafficAlertInterval(double trafficAlertInterval) {
-		this.trafficAlertInterval = trafficAlertInterval;
+	public void setAlertChangeInterval(double alertChangeInterval) {
+		this.alertChangeInterval = alertChangeInterval;
 	}
 
 
