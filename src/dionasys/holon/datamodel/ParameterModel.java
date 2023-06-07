@@ -3,21 +3,17 @@
  */
 package dionasys.holon.datamodel;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author elhabbash
  *
  */
 
-@XmlRootElement(name = "parameter")
 public class ParameterModel {
 
     String name;    
-    String dataType;
+    Integer dataType;
 
-    public ParameterModel(String name, String dataType) {
+    public ParameterModel(String name, Integer dataType) {
         this.name = name;
         this.dataType = dataType;
     }
@@ -26,17 +22,15 @@ public class ParameterModel {
         return name;
     }
    
-    public String getDataType() {
+    public int getDataType() {
         return dataType;
     }
 
-    @XmlElement
     public void setName(String name) {
         this.name = name;    
     }
     
-    @XmlElement
-    public void setDataType(String dataType) {
+    public void setDataType(Integer dataType) {
         this.dataType = dataType;
     }
 
