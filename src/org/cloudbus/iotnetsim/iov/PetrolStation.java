@@ -13,6 +13,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
+import experiments.configurations.ExperimentsConfigurations;
+
 /**
  * Class Station
  * for service station of fuel and electric cars based on the VehicleType
@@ -25,6 +27,7 @@ public class PetrolStation extends IoTNode  {
 
 	private boolean isAvailable;
 	private double price;		//cost per unit (e.g. per litre of fuel)
+	protected double priceChangeInterval;	// interval for changing price every x seconds		
 
 	protected int currentExpDay;
 
@@ -45,13 +48,14 @@ public class PetrolStation extends IoTNode  {
 	public PetrolStation(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
 			String forwardNodeName, MessagingProtocol msgProtocol,
-			double price) {
+			double price, double price_change_interval) {
 
 		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 
 		this.isAvailable = true;
 		this.price = price;
+		this.priceChangeInterval = price_change_interval;
 
 		this.currentExpDay = 1;
 	}
@@ -68,7 +72,7 @@ public class PetrolStation extends IoTNode  {
 		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_NODE_CONNECTION_EVENT, isAvailable);
 
 		// schedule the first event for the station to change the price
-		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_PETROLSTATION_CHANGE_PRICE_EVENT);
+		schedule(this.getId(), this.priceChangeInterval, CloudSimTags.IOV_PETROLSTATION_CHANGE_PRICE_EVENT);
 	}
 
 	@Override
@@ -83,10 +87,10 @@ public class PetrolStation extends IoTNode  {
 		switch (ev.getTag()) {
 
 		case CloudSimTags.IOV_PETROLSTATION_CHANGE_PRICE_EVENT:
-			processChangePriceRandom();
+			processChangePrice();
 			break;
 		case CloudSimTags.IOV_PETROLSTATION_CHECK_PRICE_EVENT:
-			processCheckPrice(ev.getSource());
+			processCheckPrice(ev);
 			break;
 			
 			// other unknown tags are processed by this method
@@ -97,15 +101,15 @@ public class PetrolStation extends IoTNode  {
 	}
 
 	/**
-	 * processChangePriceRandom()
+	 * processChangePrice()
 	 */
-	private void processChangePriceRandom() {
+	private void processChangePrice() {
 		// get random price within a range -- min + (randomValue * (max - min))
 		double random = new Random().nextDouble();  		
 		double rPrice = Math.abs((this.price-1.0) + (random * ((this.price+1.0) - (this.price-1.0))));
 
 		this.price = rPrice;
-		
+
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing the price" 
 				+ " of day " + currentExpDay
 				+ " to " + Double.toString(this.price) 
@@ -115,18 +119,32 @@ public class PetrolStation extends IoTNode  {
 		if (CloudSim.clock() >= currentExpDay*24*60*60) {
 			currentExpDay +=1;
 		}
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
-			//schedule the next change on the next day
-			schedule(this.getId(), ((currentExpDay+1)*24*60*60), CloudSimTags.IOV_PETROLSTATION_CHANGE_PRICE_EVENT);
-		}	
+
+		//schedule the next change event
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+			schedule(this.getId(), this.priceChangeInterval, CloudSimTags.IOV_PETROLSTATION_CHANGE_PRICE_EVENT);
+		}
 	}
 	
 	/**
 	 * processCheckPrice()
 	 */
-	private void processCheckPrice(int userID) {
+	private void processCheckPrice(SimEvent ev) {
+		int userID = ev.getSource();
+
+		UserSmartPhone user = (UserSmartPhone) CloudSim.getEntity(userID);
+
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is sending fuel price to " +
+				CloudSim.getEntityName(userID)
+				);
+
 		// send the price to the user
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_PETROLSTATION_PRICE_EVENT, this.price);	
+		if (this.getMessagingProtocol() == user.getMessagingProtocol()) {
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_PETROLSTATION_PRICE_EVENT, 
+					this.price);
+		} else {
+			schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_REQUEST_MEDIATOR);
+		}
 	}
 	
 
@@ -156,6 +174,14 @@ public class PetrolStation extends IoTNode  {
 	 */
 	public void setPrice(double price) {
 		this.price = price;
+	}
+
+	public double getPriceChangeInterval() {
+		return priceChangeInterval;
+	}
+
+	public void setPriceChangeInterval(double priceChangeInterval) {
+		this.priceChangeInterval = priceChangeInterval;
 	}
 
 

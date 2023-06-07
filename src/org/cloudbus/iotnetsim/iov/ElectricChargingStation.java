@@ -5,6 +5,7 @@ import java.util.Random;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
@@ -12,6 +13,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
+
+import experiments.configurations.ExperimentsConfigurations;
 
 /**
  * Class Station
@@ -24,6 +27,8 @@ import org.cloudbus.iotnetsim.network.NetConnection;
 public class ElectricChargingStation extends IoTNode  {
 
 	private boolean isAvailable;
+	protected double availabilityChangeInterval;	// interval for changing availability every x seconds		
+
 	private double price;		//cost per unit (e.g. per litre of fuel)
 
 	protected int currentExpDay;
@@ -45,12 +50,13 @@ public class ElectricChargingStation extends IoTNode  {
 	public ElectricChargingStation(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
 			String forwardNodeName, MessagingProtocol msgProtocol,
-			double price) {
+			double price, double availability_change_interval) {
 
 		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 
 		this.isAvailable = true;
+		this.availabilityChangeInterval = availability_change_interval;
 		this.price = price;
 		
 		this.currentExpDay = 1;
@@ -68,8 +74,7 @@ public class ElectricChargingStation extends IoTNode  {
 		schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_NODE_CONNECTION_EVENT, isAvailable);
 
 		// schedule the first event for the station to change its availability
-		schedule(this.getId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_ELECTRICCHARGINGSTATION_CHANGE_AVAILABILITY_EVENT);
-
+		scheduleNextAvailabilityChange();
 	}
 
 	@Override
@@ -84,10 +89,10 @@ public class ElectricChargingStation extends IoTNode  {
 		switch (ev.getTag()) {
 
 		case CloudSimTags.IOV_ELECTRICCHARGINGSTATION_CHANGE_AVAILABILITY_EVENT:
-			processChangeStationvailability();
+			processChangeStationAvailability();
 			break;
 		case CloudSimTags.IOV_ELECTRICCHARGINGSTATION_CHECK_AVAILABILITY_EVENT:
-			processCheckAvailability(ev.getSource());
+			processCheckAvailability(ev);
 			break;
 			
 			// other unknown tags are processed by this method
@@ -98,9 +103,9 @@ public class ElectricChargingStation extends IoTNode  {
 	}
 
 	/**
-	 * processChangeStationvailability()
+	 * processChangeStationAvailability()
 	 */
-	private void processChangeStationvailability() {
+	private void processChangeStationAvailability() {
 		this.isAvailable = !(this.isAvailable);
 
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is changing availability" 
@@ -115,30 +120,45 @@ public class ElectricChargingStation extends IoTNode  {
 		if (CloudSim.clock() >= currentExpDay*24*60*60) {
 			currentExpDay +=1;
 		}
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
-			//schedule the next event for updating the station availability at random time
-			scheduleNextAvailabilityChangeRandom(); 
-		}	
-	}
-
-	/**
-	 * processCheckAvailability()
-	 */
-	private void processCheckAvailability(int userID) {
-		// send the price to the user
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_ELECTRICCHARGINGSTATION_AVAILABILITY_EVENT, 
-				this.isAvailable);	
+		//schedule the next event for updating the station availability at random time
+		scheduleNextAvailabilityChange(); 
 	}
 	
 	/**
-	 * schedule next event for changing station availability at random time
+	 * schedule next event for changing station availability 
 	 */
-	private void scheduleNextAvailabilityChangeRandom(){
-		// get random time within the same day -- min + (randomValue * (max - min))
-		double random = new Random().nextDouble();  		
-		double rTime = CloudSim.getMinTimeBetweenEvents() + (random * ((24*60*60) - CloudSim.getMinTimeBetweenEvents()));  
+	private void scheduleNextAvailabilityChange(){
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+			if (ExperimentsConfigurations.IOV_EXP_ServiceEntities_CHANGE == "Frequent") {
+				schedule(this.getId(), this.availabilityChangeInterval, CloudSimTags.IOV_ELECTRICCHARGINGSTATION_CHANGE_AVAILABILITY_EVENT);
+			} else if (ExperimentsConfigurations.IOV_EXP_ServiceEntities_CHANGE == "Random") {
+				// get random time within the same day -- min + (randomValue * (max - min))
+				double random = new Random().nextDouble();  		
+				double rTime = CloudSim.getMinTimeBetweenEvents() + (random * ((24*60*60) - CloudSim.getMinTimeBetweenEvents()));  
+				schedule(this.getId(), rTime, CloudSimTags.IOV_ELECTRICCHARGINGSTATION_CHANGE_AVAILABILITY_EVENT);				
+			}
+		}
+	}
+		
+	/**
+	 * processCheckAvailability()
+	 */
+	private void processCheckAvailability(SimEvent ev) {
+		int userID = ev.getSource();
 
-		schedule(this.getId(), rTime, CloudSimTags.IOV_ELECTRICCHARGINGSTATION_CHECK_AVAILABILITY_EVENT);
+		UserSmartPhone user = (UserSmartPhone) CloudSim.getEntity(userID);
+
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is sending availability " + this.isAvailable
+				+ " to " + CloudSim.getEntityName(userID)
+				);
+
+		// send the availability to the user
+		if (this.getMessagingProtocol() == user.getMessagingProtocol()) {
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_ELECTRICCHARGINGSTATION_AVAILABILITY_EVENT, 
+					this.isAvailable);
+		} else {
+			schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_REQUEST_MEDIATOR);
+		}
 	}
 
 
@@ -154,6 +174,14 @@ public class ElectricChargingStation extends IoTNode  {
 	 */
 	public void setAvailable(boolean isAvailable) {
 		this.isAvailable = isAvailable;
+	}
+
+	public double getAvailabilityChangeInterval() {
+		return availabilityChangeInterval;
+	}
+
+	public void setAvailabilityChangeInterval(double availabilityChangeInterval) {
+		this.availabilityChangeInterval = availabilityChangeInterval;
 	}
 
 	/**

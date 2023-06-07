@@ -16,6 +16,8 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
+import experiments.configurations.ExperimentsConfigurations;
+
 /**
  * Class Restaurant
  * 
@@ -31,6 +33,8 @@ public class Restaurant extends IoTNode {
 	protected double closingTime;
 	
 	protected boolean isOpen;
+	
+	protected double orderPreparationTime;
 
 	protected int currentExpDay;
 
@@ -51,13 +55,14 @@ public class Restaurant extends IoTNode {
 	public Restaurant(String name, 
 			Location location, IoTNodeType nodeType, NetConnection connection, IoTNodePower power, 
 			String forwardNodeName, MessagingProtocol msgProtocol,
-			double opening_time, double closing_time) {
+			double opening_time, double closing_time, double order_preparation_time) {
 
 		super(name, location, nodeType, connection, power, forwardNodeName, msgProtocol);
 		// TODO Auto-generated constructor stub
 		this.openingTime = opening_time;
 		this.closingTime = closing_time;
 		this.isOpen = true;
+		this.orderPreparationTime = order_preparation_time;
 		
 		this.currentExpDay = 1;
 	}
@@ -95,16 +100,15 @@ public class Restaurant extends IoTNode {
 		case CloudSimTags.IOV_RESTAURANT_CLOSE_EVENT:
 			processCloseRestaurant();
 			break;
+		case CloudSimTags.IOV_RESTAURANT_CHECK_AVAILABILITY_EVENT:
+			processCheckAvailability(ev);
+			break;
 		// confirm receiving order
 		case CloudSimTags.IOV_RESTAURANT_ORDER_EVENT:
 			processReceiveOrder(ev.getSource());
 			break;
-		// confirm booking table
-		case CloudSimTags.IOV_RESTAURANT_BOOKING_EVENT:
-			processBookTable(ev.getSource());
-			break;
+			// other unknown tags are processed by this method
 
-		// other unknown tags are processed by this method
 		default:
 			processOtherEvent(ev);
 			break;
@@ -143,7 +147,7 @@ public class Restaurant extends IoTNode {
 		//send data to Datacenter
 		schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_RECEIVE_DATA_EVENT, isOpen);
 
-		if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+		if (currentExpDay < ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 			// schedule event for restaurant opening for next day
 			schedule(this.getId(), this.openingTime*(currentExpDay*24*60*60), CloudSimTags.IOV_RESTAURANT_OPEN_EVENT);		
 		}
@@ -151,44 +155,64 @@ public class Restaurant extends IoTNode {
 	}
 	
 	/**
+	 * processCheckAvailability()
+	 */
+	private void processCheckAvailability(SimEvent ev) {
+		int userID = ev.getSource();
+
+		UserSmartPhone user = (UserSmartPhone) CloudSim.getEntity(userID);
+
+		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is sending availability " + this.isOpen
+				+ " to " + CloudSim.getEntityName(userID)
+				);
+
+		// send the availability to the user
+		if (this.getMessagingProtocol() == user.getMessagingProtocol()) {
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RECEIVE_RESTAURANT_AVAILABILITY_EVENT, 
+					this.isOpen);
+		} else {
+			schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_REQUEST_MEDIATOR);
+		}
+	}
+
+	/**
 	 * processReceiveOrder()
 	 */
 
 	private void processReceiveOrder(int userID) {
+		UserSmartPhone user = (UserSmartPhone) CloudSim.getEntity(userID);
+		
 		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is receiving the order"
 				+ " from User " + CloudSim.getEntityName(userID)
 				+ " and sending confirmation"
 				);
 		
 		// send confirmation to the user
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RESTAURANT_ORDER_CONFIRMATION_EVENT);	
+		if (this.getMessagingProtocol() == user.getMessagingProtocol()) {
+			schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RESTAURANT_ORDER_CONFIRMATION_EVENT);
+		} else {
+			schedule(getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_CLOUD_REQUEST_MEDIATOR);
+		}
 		
-		// get a random time for the order preparation
-		double preparationTime = getOrderPreparationTimeRandom();
-		
+		double preparationTime = CloudSim.getMinTimeBetweenEvents();
+		// get time for the order preparation
+		if (ExperimentsConfigurations.IOV_EXP_ServiceEntities_CHANGE == "Frequent") {
+			preparationTime = this.orderPreparationTime;
+		} else if (ExperimentsConfigurations.IOV_EXP_ServiceEntities_CHANGE == "Random") {
+			// get random time within a hour
+			Random random = new Random(); 
+			preparationTime = random.nextDouble() * ((60*60) + CloudSim.getMinTimeBetweenEvents());
+		}
+				
 		// send notification to the user after the preparation time
-		schedule(userID, preparationTime, CloudSimTags.IOV_RESTAURANT_ORDER_READY_EVENT);
+		if (this.getMessagingProtocol() == user.getMessagingProtocol()) {
+			schedule(userID, preparationTime, CloudSimTags.IOV_RESTAURANT_ORDER_READY_EVENT);
+		} else {
+			schedule(getForwardNodeId(), preparationTime, CloudSimTags.IOV_CLOUD_REQUEST_MEDIATOR);
+		}
 	}
-	
-	/**
-	 * processBookTable()
-	 */
-	private void processBookTable(int userID) {
-		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is confirming booking a table "
-				+ "from User " + CloudSim.getEntityName(userID)
-				);
 		
-		// send confirmation to the user
-		schedule(userID, CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_RESTAURANT_BOOKING_CONFIRMATION_EVENT);	
-	}
 	
-
-	private double getOrderPreparationTimeRandom() {
-		// get random time within a hour
-		Random random = new Random();  		
-		return random.nextDouble() * ((60*60) + CloudSim.getMinTimeBetweenEvents());
-	}
-
 	/**
 	 * @return the openingTime
 	 */
@@ -229,6 +253,14 @@ public class Restaurant extends IoTNode {
 	 */
 	public void setOpen(boolean isOpen) {
 		this.isOpen = isOpen;
+	}
+	
+	public double getOrderPreparationTime() {
+		return orderPreparationTime;
+	}
+
+	public void setOrderPreparationTime(double orderPreparationTime) {
+		this.orderPreparationTime = orderPreparationTime;
 	}
 
 	/**

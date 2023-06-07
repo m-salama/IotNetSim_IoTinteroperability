@@ -6,6 +6,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.iotnetsim.IoTDatacenter;
 import org.cloudbus.iotnetsim.IoTNodePower;
 import org.cloudbus.iotnetsim.Location;
 import org.cloudbus.iotnetsim.iot.nodes.IoTNode;
@@ -14,7 +15,7 @@ import org.cloudbus.iotnetsim.iot.nodes.IoTNodeType;
 import org.cloudbus.iotnetsim.iot.nodes.MessagingProtocol;
 import org.cloudbus.iotnetsim.network.NetConnection;
 
-import configurations.ExperimentsConfigurations;
+import experiments.configurations.ExperimentsConfigurations;
 
 /**
  * Class Vehicle represents any type of moving vehicle
@@ -52,7 +53,9 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 	private double currentFuelLevel;		//in unit gallon, when full, set to the maxFuelCapacity
 	private boolean fuelAlert;				//boolean variable set to true if the currentFuelLevel is <= the fuelThreshold
 
-	protected int currentExpDay;
+	private int countRoadTrips;
+	
+	private int currentExpDay;
 
 	
 	public Vehicle(String name) {
@@ -85,17 +88,19 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 		this.avgSpeed = avg_speed;
 		this.setCurrentFuelLevel(fuel_level);
 
-		this.currentExpDay = 1;
-
 		// calculate the threshold 
 		if (this.vehicleType == VehicleType.PETROL_VEHICLE) {
 			// as 25% of the tank size
 			this.setFuelThreshold(fuelTankSize*0.25);
 		} else if (this.vehicleType == VehicleType.ELECTRIC_VEHICLE) {
-			// as 20% of the battery size
-			this.setFuelThreshold(fuelTankSize*0.20);
+			// as 25% of the battery size
+			this.setFuelThreshold(fuelTankSize*0.25);
 		}
 		this.fuelAlert = (this.currentFuelLevel <= this.fuelThreshold);
+		
+		this.countRoadTrips = 0;
+		
+		this.currentExpDay = 1;
 	}
 
 	@Override
@@ -123,8 +128,8 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 		case CloudSimTags.IOV_VEHICLE_MOVE_EVENT:
 			processMoveVehicle();
 			break;
-		case CloudSimTags.IOV_VEHICLE_FUEL_FULL_EVENT:
-			processFuelFull();
+		case CloudSimTags.IOV_VEHICLE_SET_FUEL_FULL_EVENT:
+			processSetFuelFull();
 			break;
 			
 		// other unknown tags are processed by this method
@@ -168,29 +173,31 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 		
 		// check the fuel level and set the alert if needed
 		if (this.currentFuelLevel > 0) {			
-			if (this.currentFuelLevel <= this.fuelThreshold) {
-				// set the fuelAlert to true
-				this.fuelAlert = true;
+			this.fuelAlert = (this.currentFuelLevel <= this.fuelThreshold);
+			if (fuelAlert) {
 				Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is setting the fuel alert to true");
-				
+
 				// send the fuel alert to the UserSmartPhone (the forwardNode)
 				schedule(this.getForwardNodeId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.IOV_VEHICLE_FUEL_ALERT_EVENT);
 			}
 		}
 		
 		if (remainingRoadTripDistance > 0) {
-			// schedule the next event for the vehicle move after 1 hour 
-			schedule(this.getId(), CloudSim.getMinTimeBetweenEvents()*60*60, CloudSimTags.IOV_VEHICLE_MOVE_EVENT);
+			if(this.currentFuelLevel > 0) {
+				// schedule the next event for the vehicle move after 1 hour 
+				schedule(this.getId(), CloudSim.getMinTimeBetweenEvents()*60*60, CloudSimTags.IOV_VEHICLE_MOVE_EVENT);
+			} else {
+				Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] is running out of fuel and stopping the journey ");
+			}
 		} else {
-			// schedule new road trip
-			if (currentExpDay < configurations.ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+			// schedule new road trip if the previous trip has been completed
+			if (this.currentExpDay <= ExperimentsConfigurations.EXP_NO_OF_DAYS) {
 				scheduleRoadTrip();	
 			}
-			currentExpDay += 1;
 		}
 	}
 
-	private void processFuelFull() {
+	private void processSetFuelFull() {
 		this.currentFuelLevel = this.fuelTankSize;
 		this.fuelAlert = false;
 		
@@ -198,21 +205,42 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 	}
 	
 	private void scheduleRoadTrip() {
-		//get random distance within a range of 500 miles -- min + (randomValue * (max - min))
-		double random1 = new Random().nextDouble();
-		remainingRoadTripDistance = 1.0 + (random1 * (500.0-1.0));
-		
-		//get random start time
-		double random2 = new Random().nextDouble();
-		double startTime = CloudSim.getMinTimeBetweenEvents() + (random2 * (ExperimentsConfigurations.DATA_UPDATE_INTERVAL[0] - CloudSim.getMinTimeBetweenEvents()));
-		
-		//schedule event to start the road trip
-		schedule(this.getId(), startTime, CloudSimTags.IOV_VEHICLE_MOVE_EVENT);
-		
-		Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] will start a new road trip "
-				+ " after " + startTime + " ms"
-				+ " for distance of " + remainingRoadTripDistance + " miles"
-				);
+		//update experiment day 
+		if (CloudSim.clock() > (this.currentExpDay*24*60*60)) {
+			this.currentExpDay = (int) (CloudSim.clock() / (24*60*60));
+		}
+
+		if (this.currentExpDay <= ExperimentsConfigurations.EXP_NO_OF_DAYS) {
+			//get trip length
+			if (ExperimentsConfigurations.IOV_EXP_TRIP_TYPE == "FixedLength") {
+				remainingRoadTripDistance = ExperimentsConfigurations.IOV_EXP_TRIP_LENGTH;
+			} else if (ExperimentsConfigurations.IOV_EXP_TRIP_TYPE == "RandomLength") {
+				//get random distance within a range of EXP_TRIP_MAX_LENGTH -- min + (randomValue * (EXP_TRIP_MAX_LENGTH - min))
+				double random = new Random().nextDouble();
+				remainingRoadTripDistance = 1.0 + (random * (ExperimentsConfigurations.IOV_EXP_TRIP_LENGTH - 1.0));
+			}
+
+			//get delay to start the next road trip
+			double startDelay = CloudSim.getMinTimeBetweenEvents();
+			if (ExperimentsConfigurations.IOV_EXP_TRIP_FREQUENCY == "Continuous") {
+				startDelay = CloudSim.getMinTimeBetweenEvents() + ExperimentsConfigurations.IOV_EXP_TRIP_INTERVAL;
+			} else if (ExperimentsConfigurations.IOV_EXP_TRIP_FREQUENCY == "Random") {
+				double random = new Random().nextDouble();
+				//min + (r *(max - min))
+				startDelay = CloudSim.getMinTimeBetweenEvents() + 
+						(random * ((ExperimentsConfigurations.EXP_NO_OF_DAYS*24*60*60) - CloudSim.getMinTimeBetweenEvents() ));
+			}
+
+			//schedule event to start the road trip
+			schedule(this.getId(), startDelay, CloudSimTags.IOV_VEHICLE_MOVE_EVENT);
+
+			Log.printLine(CloudSim.clock() + ": [" + this.getName() + "] will start a new road trip "
+					+ " after " + startDelay + " ms"
+					+ " for distance of " + remainingRoadTripDistance + " miles"
+					);
+			
+			this.countRoadTrips += 1;
+		}
 	}
 	
 	
@@ -324,6 +352,20 @@ public class Vehicle extends IoTNode  implements IoTNodeMobile {
 	 */
 	public void setFuelAlert(boolean fuelAlert) {
 		this.fuelAlert = fuelAlert;
+	}
+
+	/**
+	 * @return the countRoadTrips
+	 */
+	public int getCountRoadTrips() {
+		return countRoadTrips;
+	}
+
+	/**
+	 * @param countRoadTrips the countRoadTrips to set
+	 */
+	public void setCountRoadTrips(int countRoadTrips) {
+		this.countRoadTrips = countRoadTrips;
 	}
 
 	
